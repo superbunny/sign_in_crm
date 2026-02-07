@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Identity Service CRM</title>
+    <meta name="description" content="Internal CRM system for managing government department relationships with the sign-in service">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-brand">
+                <div class="canada-wordmark">
+                    <span class="gc-symbol">🍁</span>
+                    <span class="gc-text">Government of Canada</span>
+                </div>
+                <h1 class="app-title">Identity Service CRM</h1>
+            </div>
+            <nav class="header-nav">
+                <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+                <button class="nav-btn" data-view="departments">Departments</button>
+                <button class="nav-btn" data-view="applications">Applications</button>
+                <button class="nav-btn" data-view="integrations">Integrations</button>
+                <button class="nav-btn" data-view="contacts">Contacts</button>
+                <button class="nav-btn" data-view="activities">Activities</button>
+                <button class="nav-btn" data-view="incidents">Incidents</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard View -->
+        <section id="view-dashboard" class="view active">
+            <div class="view-header">
+                <h2>Dashboard</h2>
+                <p class="view-subtitle">Overview of Identity Service relationships and operations</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card stat-departments">
+                    <div class="stat-icon">🏛️</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-total-departments">-</span>
+                        <span class="stat-label">Total Departments</span>
+                    </div>
+                    <div class="stat-secondary">
+                        <span id="stat-active-departments">-</span> active • <span id="stat-critical-departments">-</span> critical
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-applications">
+                    <div class="stat-icon">📱</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-total-applications">-</span>
+                        <span class="stat-label">Applications</span>
+                    </div>
+                    <div class="stat-secondary">
+                        <span id="stat-live-applications">-</span> live • <span id="stat-integrating-applications">-</span> integrating
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-risk">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-high-risk">-</span>
+                        <span class="stat-label">High Risk</span>
+                    </div>
+                    <div class="stat-secondary">
+                        <span id="stat-blocked">-</span> blocked • <span id="stat-delayed">-</span> delayed
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-incidents">
+                    <div class="stat-icon">🔴</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="stat-open-incidents">-</span>
+                        <span class="stat-label">Open Incidents</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Chat Panel -->
+            <div class="chat-panel">
+                <div class="chat-header">
+                    <h3>🤖 AI Assistant</h3>
+                    <span class="chat-subtitle">Ask questions about your data</span>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-message system">
+                        <p>Hello! I'm your AI assistant. Ask me questions about departments, applications, integrations, and more.</p>
+                        <p class="chat-examples">
+                            Try: "Which departments are critical?" or "Show me delayed integrations"
+                        </p>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question..." autocomplete="off">
+                    <button id="chat-send" class="chat-send-btn">Send</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Departments View -->
+        <section id="view-departments" class="view">
+            <div class="view-header">
+                <h2>Departments</h2>
+                <button class="btn btn-primary" onclick="showAddDepartmentModal()">+ Add Department</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="departments-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Short Name</th>
+                            <th>Tier</th>
+                            <th>Status</th>
+                            <th>Owner Team</th>
+                            <th>Apps</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Applications View -->
+        <section id="view-applications" class="view">
+            <div class="view-header">
+                <h2>Applications</h2>
+                <button class="btn btn-primary" onclick="showAddApplicationModal()">+ Add Application</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="applications-table">
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Department</th>
+                            <th>Environment</th>
+                            <th>Auth Type</th>
+                            <th>Status</th>
+                            <th>Go-Live Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Integrations View -->
+        <section id="view-integrations" class="view">
+            <div class="view-header">
+                <h2>Integration Status</h2>
+                <p class="view-subtitle">Track integration progress for all applications</p>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="integrations-table">
+                    <thead>
+                        <tr>
+                            <th>Application</th>
+                            <th>Department</th>
+                            <th>Stage</th>
+                            <th>Status</th>
+                            <th>Risk Level</th>
+                            <th>Last Updated</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Contacts View -->
+        <section id="view-contacts" class="view">
+            <div class="view-header">
+                <h2>Contacts</h2>
+                <button class="btn btn-primary" onclick="showAddContactModal()">+ Add Contact</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="contacts-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Activities View -->
+        <section id="view-activities" class="view">
+            <div class="view-header">
+                <h2>Engagement Activities</h2>
+                <button class="btn btn-primary" onclick="showAddActivityModal()">+ Add Activity</button>
+            </div>
+            <div class="timeline-container" id="activities-timeline"></div>
+        </section>
+
+        <!-- Incidents View -->
+        <section id="view-incidents" class="view">
+            <div class="view-header">
+                <h2>Incidents</h2>
+                <button class="btn btn-primary" onclick="showAddIncidentModal()">+ Add Incident</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table" id="incidents-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Application</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Created</th>
+                            <th>Resolved</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Container -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal Title</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="gc-symbol">🍁</span>
+                <span>Government of Canada</span>
+            </div>
+            <div class="footer-info">
+                <span>Identity Service CRM v1.0</span>
+                <span>•</span>
+                <span>Internal Use Only</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
