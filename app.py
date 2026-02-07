@@ -546,7 +546,7 @@ def get_database_context(session):
     }
 
 
-SYSTEM_PROMPT = """You are an AI assistant for the Government Identity Service CRM system. 
+SYSTEM_PROMPT = """You are an AI assistant for the CanadaLogin CRM system. 
 You help users query and understand data about government departments, their applications, 
 integration statuses, contacts, engagement activities, and incidents.
 
@@ -638,7 +638,7 @@ Current Database State:
         })
         chat_messages.append({
             'role': 'model',
-            'parts': ["I'm ready to help you query and analyze your Government Identity Service CRM data. I can answer questions about departments, applications, integration statuses, contacts, activities, and incidents. I can also generate charts and visualizations when you ask. What would you like to know?"]
+            'parts': ["I'm ready to help you query and analyze your CanadaLogin CRM data. I can answer questions about departments, applications, integration statuses, contacts, activities, and incidents. I can also generate charts and visualizations when you ask. What would you like to know?"]
         })
         
         # Add conversation history
@@ -676,7 +676,7 @@ Current Database State:
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("Government Identity Service CRM")
+    print("CanadaLogin CRM")
     print("=" * 60)
     print(f"Database: {config.DATABASE_PATH}")
     print(f"Gemini AI: {'Configured' if config.GEMINI_API_KEY else 'Not configured (set GEMINI_API_KEY)'}")

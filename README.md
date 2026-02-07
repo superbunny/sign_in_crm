@@ -1,4 +1,4 @@
-# Government Identity Service CRM
+# CanadaLogin CRM
 
 An internal CRM system for managing government department relationships with a sign-in (authentication) service provider. Built to replace Excel-based tracking with a structured, AI-ready system.
 

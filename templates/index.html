@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Government Identity Service CRM</title>
+    <title>CanadaLogin CRM</title>
     <meta name="description"
         content="Internal CRM system for managing government department relationships with the sign-in service">
     <link rel="stylesheet" href="/static/style.css">
@@ -17,11 +17,13 @@
     <header class="header">
         <div class="header-container">
             <div class="header-brand">
-                <div class="canada-wordmark">
-                    <span class="gc-symbol">🍁</span>
-                    <span class="gc-text">Government of Canada</span>
+                <a href="/" class="gc-signature-link">
+                    <img src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-en.svg"
+                        alt="Government of Canada" class="gc-signature">
+                </a>
+                <div class="app-title-container">
+                    <h1 class="app-title">CanadaLogin CRM</h1>
                 </div>
-                <h1 class="app-title">Identity Service CRM</h1>
             </div>
             <nav class="header-nav">
                 <button class="nav-btn active" data-view="dashboard">Dashboard</button>
@@ -264,14 +266,14 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-container">
-            <div class="footer-brand">
-                <span class="gc-symbol">🍁</span>
-                <span>Government of Canada</span>
-            </div>
             <div class="footer-info">
-                <span>Identity Service CRM v1.0</span>
+                <span>CanadaLogin CRM v1.0</span>
                 <span>•</span>
                 <span>Internal Use Only</span>
+            </div>
+            <div class="footer-brand">
+                <img src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/wmms-blk.svg"
+                    alt="Symbol of the Government of Canada" class="gc-wordmark">
             </div>
         </div>
     </footer>
