@@ -561,40 +561,103 @@ You have access to current database state that includes:
 Answer questions concisely and accurately based on the provided data. 
 If you need to reference specific entities, use their names.
 Format your responses clearly with bullet points when listing multiple items.
+
+IMPORTANT - Chart Generation:
+When users ask for charts, graphs, visualizations, or to "show" data visually, you MUST respond with a JSON block containing chart data.
+The JSON block should be wrapped in ```chart and ``` markers.
+
+Supported chart types: bar, pie, line, doughnut
+
+Example chart response format:
+```chart
+{
+  "type": "bar",
+  "title": "Departments by Tier",
+  "labels": ["Critical", "Standard"],
+  "datasets": [{
+    "label": "Count",
+    "data": [3, 3],
+    "backgroundColor": ["#E74C3C", "#3498DB"]
+  }]
+}
+```
+
+For pie/doughnut charts, use this format:
+```chart
+{
+  "type": "pie",
+  "title": "Application Status Distribution",
+  "labels": ["Live", "Integrating", "Deprecated"],
+  "datasets": [{
+    "data": [6, 3, 1],
+    "backgroundColor": ["#27AE60", "#F39C12", "#95A5A6"]
+  }]
+}
+```
+
+Always include a text explanation along with the chart.
 """
 
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """AI chat endpoint using Gemini."""
+    """AI chat endpoint using Gemini with conversation history support."""
     if not config.GEMINI_API_KEY:
         return jsonify({'error': 'Gemini API key not configured. Please set GEMINI_API_KEY in .env file.'}), 500
     
-    session = get_db_session()
+    db_session = get_db_session()
     try:
         data = request.json
         user_message = data.get('message', '')
+        conversation_history = data.get('history', [])  # List of {role, content} messages
         
         if not user_message:
             return jsonify({'error': 'No message provided'}), 400
         
         # Get current database context
-        db_context = get_database_context(session)
-        
-        # Create the prompt with context
+        db_context = get_database_context(db_session)
         context_str = json.dumps(db_context, indent=2)
-        full_prompt = f"""{SYSTEM_PROMPT}
+        
+        # Build conversation for Gemini
+        model = genai.GenerativeModel(config.GEMINI_MODEL)
+        
+        # Create the initial context message
+        system_context = f"""{SYSTEM_PROMPT}
 
 Current Database State:
 {context_str}
-
-User Question: {user_message}
-
-Please provide a helpful answer based on the data above."""
+"""
         
-        # Call Gemini API
-        model = genai.GenerativeModel(config.GEMINI_MODEL)
-        response = model.generate_content(full_prompt)
+        # Build chat history for multi-turn conversation
+        chat_messages = []
+        
+        # Add system context as first user message (Gemini doesn't have system role)
+        chat_messages.append({
+            'role': 'user',
+            'parts': [f"[System Context - Do not repeat this]\n{system_context}\n\nI understand. I'll help you with questions about the CRM data. What would you like to know?"]
+        })
+        chat_messages.append({
+            'role': 'model',
+            'parts': ["I'm ready to help you query and analyze your Government Identity Service CRM data. I can answer questions about departments, applications, integration statuses, contacts, activities, and incidents. I can also generate charts and visualizations when you ask. What would you like to know?"]
+        })
+        
+        # Add conversation history
+        for msg in conversation_history:
+            role = 'user' if msg.get('role') == 'user' else 'model'
+            chat_messages.append({
+                'role': role,
+                'parts': [msg.get('content', '')]
+            })
+        
+        # Add current user message
+        chat_messages.append({
+            'role': 'user',
+            'parts': [user_message]
+        })
+        
+        # Start chat and send all messages
+        chat = model.start_chat(history=chat_messages[:-1])
+        response = chat.send_message(user_message)
         
         return jsonify({
             'response': response.text,
@@ -606,7 +669,7 @@ Please provide a helpful answer based on the data above."""
             'status': 'error'
         }), 500
     finally:
-        session.close()
+        db_session.close()
 
 
 # ==================== RUN APPLICATION ====================

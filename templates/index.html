@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Government Identity Service CRM</title>
-    <meta name="description" content="Internal CRM system for managing government department relationships with the sign-in service">
+    <meta name="description"
+        content="Internal CRM system for managing government department relationships with the sign-in service">
     <link rel="stylesheet" href="/static/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <!-- Header -->
     <header class="header">
@@ -39,7 +43,7 @@
                 <h2>Dashboard</h2>
                 <p class="view-subtitle">Overview of Identity Service relationships and operations</p>
             </div>
-            
+
             <div class="stats-grid">
                 <div class="stat-card stat-departments">
                     <div class="stat-icon">🏛️</div>
@@ -48,10 +52,11 @@
                         <span class="stat-label">Total Departments</span>
                     </div>
                     <div class="stat-secondary">
-                        <span id="stat-active-departments">-</span> active • <span id="stat-critical-departments">-</span> critical
+                        <span id="stat-active-departments">-</span> active • <span
+                            id="stat-critical-departments">-</span> critical
                     </div>
                 </div>
-                
+
                 <div class="stat-card stat-applications">
                     <div class="stat-icon">📱</div>
                     <div class="stat-info">
@@ -59,10 +64,11 @@
                         <span class="stat-label">Applications</span>
                     </div>
                     <div class="stat-secondary">
-                        <span id="stat-live-applications">-</span> live • <span id="stat-integrating-applications">-</span> integrating
+                        <span id="stat-live-applications">-</span> live • <span
+                            id="stat-integrating-applications">-</span> integrating
                     </div>
                 </div>
-                
+
                 <div class="stat-card stat-risk">
                     <div class="stat-icon">⚠️</div>
                     <div class="stat-info">
@@ -73,7 +79,7 @@
                         <span id="stat-blocked">-</span> blocked • <span id="stat-delayed">-</span> delayed
                     </div>
                 </div>
-                
+
                 <div class="stat-card stat-incidents">
                     <div class="stat-icon">🔴</div>
                     <div class="stat-info">
@@ -82,23 +88,31 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- AI Chat Panel -->
             <div class="chat-panel">
                 <div class="chat-header">
-                    <h3>🤖 AI Assistant</h3>
-                    <span class="chat-subtitle">Ask questions about your data</span>
+                    <div class="chat-header-left">
+                        <h3>🤖 AI Assistant</h3>
+                        <span class="chat-subtitle">Ask questions about your data</span>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button id="chat-clear" class="btn btn-sm btn-secondary" title="Clear History">🗑️
+                            Clear</button>
+                        <button id="chat-new" class="btn btn-sm btn-secondary" title="New Chat">✨ New Chat</button>
+                    </div>
                 </div>
                 <div class="chat-messages" id="chat-messages">
-                    <div class="chat-message system">
-                        <p>Hello! I'm your AI assistant. Ask me questions about departments, applications, integrations, and more.</p>
-                        <p class="chat-examples">
-                            Try: "Which departments are critical?" or "Show me delayed integrations"
-                        </p>
+                    <div class="chat-message assistant">
+                        <p>Hello! I'm your AI assistant. Ask me questions about departments, applications, integrations,
+                            and more.</p>
+                        <p style="color: #666; font-size: 0.9em;">Try: "Which departments are critical?" or "Show me a
+                            chart of applications by status"</p>
                     </div>
                 </div>
                 <div class="chat-input-container">
-                    <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question..." autocomplete="off">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question..."
+                        autocomplete="off">
                     <button id="chat-send" class="chat-send-btn">Send</button>
                 </div>
             </div>
@@ -264,4 +278,5 @@
 
     <script src="/static/app.js"></script>
 </body>
+
 </html>

@@ -19,6 +19,7 @@ An internal CRM system for managing government department relationships with a s
 - **Backend**: Python 3.13, Flask, SQLAlchemy
 - **Database**: SQLite
 - **Frontend**: HTML/CSS/JavaScript (Government of Canada style)
+- **Charts**: Chart.js
 - **AI**: Google Gemini API
 
 ## Quick Start
@@ -105,12 +106,30 @@ gov-crm/
 
 ## AI Assistant
 
-The AI assistant can answer questions about your data using natural language:
+The AI assistant can answer questions about your data using natural language. It supports:
 
+### Text Queries
 - "Which departments are critical?"
 - "Show me delayed integrations"
 - "Who is the technical contact for CRA?"
 - "What applications are currently in testing?"
+
+### Chart Generation
+Ask for visualizations and get interactive charts:
+- "Show me a chart of applications by status"
+- "Create a pie chart of departments by tier"
+- "Visualize integration risk levels as a bar chart"
+
+Supported chart types: bar, pie, doughnut, line
+
+### Conversation History
+The AI remembers your chat context for follow-up questions:
+- You: "Which departments are critical?"
+- AI: *lists critical departments*
+- You: "How many applications do they have?" *(AI understands context)*
+
+### Clear/New Chat
+Use the buttons in the chat header to reset the conversation.
 
 ## Data Model
 

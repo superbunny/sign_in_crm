@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('chat-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendChatMessage();
     });
+
+    // Initialize chat buttons (clear/new chat)
+    initChatButtons();
 });
 
 // ==================== VIEW NAVIGATION ====================
@@ -779,6 +782,47 @@ async function editIncident(id) {
 }
 
 // ==================== CHAT ====================
+// Chat history for multi-turn conversations
+let chatHistory = [];
+let chartInstances = {};  // Store chart instances to destroy before creating new ones
+
+function initChatButtons() {
+    // Add clear and new chat button handlers
+    const clearBtn = document.getElementById('chat-clear');
+    const newChatBtn = document.getElementById('chat-new');
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearChatHistory);
+    }
+    if (newChatBtn) {
+        newChatBtn.addEventListener('click', startNewChat);
+    }
+}
+
+function clearChatHistory() {
+    chatHistory = [];
+    // Destroy all chart instances
+    Object.values(chartInstances).forEach(chart => chart.destroy());
+    chartInstances = {};
+
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.innerHTML = `
+        <div class="chat-message assistant">
+            <p>Hello! I'm your AI assistant. Ask me questions about departments, applications, integrations, and more.</p>
+            <p style="color: #666; font-size: 0.9em;">Try: "Which departments are critical?" or "Show me a chart of applications by status"</p>
+        </div>
+    `;
+}
+
+function startNewChat() {
+    if (chatHistory.length > 0) {
+        if (!confirm('Start a new conversation? Current chat history will be cleared.')) {
+            return;
+        }
+    }
+    clearChatHistory();
+}
+
 async function sendChatMessage() {
     const input = document.getElementById('chat-input');
     const message = input.value.trim();
@@ -787,12 +831,15 @@ async function sendChatMessage() {
     const messagesContainer = document.getElementById('chat-messages');
     const sendBtn = document.getElementById('chat-send');
 
-    // Add user message
+    // Add user message to UI
     messagesContainer.innerHTML += `
         <div class="chat-message user">
             <p>${escapeHtml(message)}</p>
         </div>
     `;
+
+    // Add user message to history
+    chatHistory.push({ role: 'user', content: message });
 
     // Clear input and disable
     input.value = '';
@@ -802,37 +849,43 @@ async function sendChatMessage() {
     // Add thinking indicator
     messagesContainer.innerHTML += `
         <div class="chat-message assistant" id="thinking">
-            <p>Thinking...</p>
+            <p><span class="thinking-dots">Thinking</span></p>
         </div>
     `;
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     try {
-        const response = await apiCall('chat', 'POST', { message });
+        const response = await apiCall('chat', 'POST', {
+            message,
+            history: chatHistory.slice(0, -1)  // Send history without the current message
+        });
 
         // Remove thinking indicator
         document.getElementById('thinking')?.remove();
 
         if (response.error) {
             messagesContainer.innerHTML += `
-                <div class="chat-message assistant">
-                    <p style="color: #e74c3c;">Error: ${escapeHtml(response.error)}</p>
+                <div class="chat-message assistant error">
+                    <p>Error: ${escapeHtml(response.error)}</p>
                 </div>
             `;
+            // Remove failed message from history
+            chatHistory.pop();
         } else {
-            messagesContainer.innerHTML += `
-                <div class="chat-message assistant">
-                    <p>${formatChatResponse(response.response)}</p>
-                </div>
-            `;
+            const formattedResponse = formatChatResponse(response.response, messagesContainer);
+
+            // Add assistant message to history
+            chatHistory.push({ role: 'assistant', content: response.response });
         }
     } catch (error) {
         document.getElementById('thinking')?.remove();
         messagesContainer.innerHTML += `
-            <div class="chat-message assistant">
-                <p style="color: #e74c3c;">Error: Failed to get response. Please try again.</p>
+            <div class="chat-message assistant error">
+                <p>Error: Failed to get response. Please try again.</p>
             </div>
         `;
+        // Remove failed message from history
+        chatHistory.pop();
     }
 
     // Re-enable input
@@ -842,13 +895,158 @@ async function sendChatMessage() {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-function formatChatResponse(text) {
-    // Convert markdown-style formatting to HTML
+function formatChatResponse(text, container) {
+    // Check for chart blocks
+    const chartRegex = /```chart\s*\n?([\s\S]*?)```/g;
+    let lastIndex = 0;
+    let hasChart = false;
+    let match;
+
+    // Create a message container div
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message assistant';
+
+    while ((match = chartRegex.exec(text)) !== null) {
+        hasChart = true;
+
+        // Add text before chart
+        const textBefore = text.substring(lastIndex, match.index);
+        if (textBefore.trim()) {
+            const textP = document.createElement('p');
+            textP.innerHTML = formatMarkdownText(textBefore);
+            messageDiv.appendChild(textP);
+        }
+
+        // Create chart container
+        try {
+            const chartData = JSON.parse(match[1]);
+            const chartContainer = createChartElement(chartData);
+            messageDiv.appendChild(chartContainer);
+        } catch (e) {
+            console.error('Failed to parse chart data:', e);
+            const errorP = document.createElement('p');
+            errorP.style.color = '#e74c3c';
+            errorP.textContent = 'Failed to render chart';
+            messageDiv.appendChild(errorP);
+        }
+
+        lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text after last chart (or all text if no chart)
+    const remainingText = text.substring(lastIndex);
+    if (remainingText.trim()) {
+        const textP = document.createElement('p');
+        textP.innerHTML = formatMarkdownText(remainingText);
+        messageDiv.appendChild(textP);
+    }
+
+    container.appendChild(messageDiv);
+
+    // Initialize any charts
+    messageDiv.querySelectorAll('.chart-canvas').forEach(canvas => {
+        const chartDataStr = canvas.dataset.chart;
+        if (chartDataStr) {
+            try {
+                const chartData = JSON.parse(chartDataStr);
+                renderChart(canvas, chartData);
+            } catch (e) {
+                console.error('Failed to render chart:', e);
+            }
+        }
+    });
+
+    return messageDiv;
+}
+
+function formatMarkdownText(text) {
     return text
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/^- (.*)/gm, '• $1')
+        .replace(/^(\d+)\. (.*)/gm, '$1. $2')
         .replace(/\n/g, '<br>');
+}
+
+function createChartElement(chartData) {
+    const container = document.createElement('div');
+    container.className = 'chat-chart-container';
+
+    if (chartData.title) {
+        const title = document.createElement('h4');
+        title.className = 'chart-title';
+        title.textContent = chartData.title;
+        container.appendChild(title);
+    }
+
+    const canvasId = 'chat-chart-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const canvas = document.createElement('canvas');
+    canvas.id = canvasId;
+    canvas.className = 'chart-canvas';
+    canvas.dataset.chart = JSON.stringify(chartData);
+    container.appendChild(canvas);
+
+    return container;
+}
+
+function renderChart(canvas, chartData) {
+    const ctx = canvas.getContext('2d');
+
+    // Destroy existing chart if present
+    if (chartInstances[canvas.id]) {
+        chartInstances[canvas.id].destroy();
+    }
+
+    // Default colors if not provided
+    const defaultColors = [
+        '#26374A', '#E8112D', '#27AE60', '#3498DB', '#F39C12',
+        '#9B59B6', '#1ABC9C', '#E74C3C', '#2C3E50', '#95A5A6'
+    ];
+
+    // Ensure datasets have colors
+    if (chartData.datasets) {
+        chartData.datasets.forEach((dataset, i) => {
+            if (!dataset.backgroundColor) {
+                if (['pie', 'doughnut'].includes(chartData.type)) {
+                    dataset.backgroundColor = defaultColors.slice(0, dataset.data.length);
+                } else {
+                    dataset.backgroundColor = defaultColors[i % defaultColors.length];
+                }
+            }
+            if (!dataset.borderColor && ['line'].includes(chartData.type)) {
+                dataset.borderColor = dataset.backgroundColor;
+                dataset.fill = false;
+            }
+        });
+    }
+
+    const config = {
+        type: chartData.type || 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: chartData.datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: ['pie', 'doughnut'].includes(chartData.type),
+                    position: 'bottom'
+                }
+            },
+            scales: ['pie', 'doughnut'].includes(chartData.type) ? {} : {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    };
+
+    chartInstances[canvas.id] = new Chart(ctx, config);
 }
 
 function escapeHtml(text) {
