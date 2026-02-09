@@ -10,7 +10,7 @@ An internal CRM system for managing government department relationships with a s
 - **Application Tracking**: Manage applications integrating with the sign-in service (OIDC, SAML, legacy)
 - **Integration Status**: Monitor integration progress through stages (intake → design → implementation → testing → production)
 - **Contact Directory**: Store contacts by department with role categorization
-- **Engagement Activities**: Log meetings, emails, workshops, and incidents with timeline view
+- **Engagement Activities**: Log meetings, emails, workshops, and incidents with table view
 - **Incident Management**: Track and resolve issues with severity levels
 - **AI Assistant**: Natural language queries powered by Google Gemini
 

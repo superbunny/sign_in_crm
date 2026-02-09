@@ -579,31 +579,97 @@ async function deleteContact(id) {
 
 // ==================== ACTIVITIES ====================
 function renderActivities() {
-    const container = document.getElementById('activities-timeline');
-
-    if (activities.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📋</div>
-                <div class="empty-state-title">No activities yet</div>
-                <p>Add your first engagement activity to get started.</p>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = activities.map(a => `
-        <div class="timeline-item type-${a.type}">
-            <div class="timeline-date">${a.date || '-'}</div>
-            <div class="timeline-header">
-                <span class="timeline-title">${a.department_name}${a.app_name ? ' - ' + a.app_name : ''}</span>
-                <span class="badge badge-${a.type}">${a.type}</span>
-            </div>
-            <div class="timeline-summary">${a.summary || '-'}</div>
-            ${a.next_action ? `<div class="timeline-next-action"><strong>Next:</strong> ${a.next_action}</div>` : ''}
-            ${a.owner ? `<div class="timeline-owner">Owner: ${a.owner}</div>` : ''}
-        </div>
+    const tbody = document.querySelector('#activities-table tbody');
+    tbody.innerHTML = activities.map(a => `
+        <tr>
+            <td>${a.date || '-'}</td>
+            <td><span class="badge badge-${a.type}">${a.type}</span></td>
+            <td><strong>${a.department_name || '-'}</strong></td>
+            <td>${a.app_name || '-'}</td>
+            <td>${a.summary || '-'}</td>
+            <td>${a.next_action || '-'}</td>
+            <td>${a.owner || '-'}</td>
+            <td class="action-btns">
+                <button class="btn btn-secondary btn-sm" onclick="editActivity(${a.activity_id})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteActivity(${a.activity_id})">Delete</button>
+            </td>
+        </tr>
     `).join('');
+}
+
+async function editActivity(id) {
+    const activity = activities.find(a => a.activity_id === id);
+    if (!activity) return;
+
+    const deptOptions = departments.map(d =>
+        `<option value="${d.department_id}" ${d.department_id === activity.department_id ? 'selected' : ''}>${d.name}</option>`
+    ).join('');
+    const appOptions = applications.map(a =>
+        `<option value="${a.app_id}" ${a.app_id === activity.app_id ? 'selected' : ''}>${a.app_name} (${a.department_name})</option>`
+    ).join('');
+
+    showModal('Edit Activity', `
+        <form id="activity-form">
+            <div class="form-group">
+                <label>Department *</label>
+                <select name="department_id" required>${deptOptions}</select>
+            </div>
+            <div class="form-group">
+                <label>Application (optional)</label>
+                <select name="app_id">
+                    <option value="">-- Select --</option>
+                    ${appOptions}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Type *</label>
+                <select name="type" required>
+                    <option value="meeting" ${activity.type === 'meeting' ? 'selected' : ''}>Meeting</option>
+                    <option value="email" ${activity.type === 'email' ? 'selected' : ''}>Email</option>
+                    <option value="workshop" ${activity.type === 'workshop' ? 'selected' : ''}>Workshop</option>
+                    <option value="incident" ${activity.type === 'incident' ? 'selected' : ''}>Incident</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="date" value="${activity.date || ''}">
+            </div>
+            <div class="form-group">
+                <label>Summary *</label>
+                <textarea name="summary" required>${activity.summary || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Next Action</label>
+                <input type="text" name="next_action" value="${activity.next_action || ''}">
+            </div>
+            <div class="form-group">
+                <label>Owner</label>
+                <input type="text" name="owner" value="${activity.owner || ''}">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    `);
+
+    document.getElementById('activity-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        if (!data.app_id) delete data.app_id;
+        await apiCall(`activities/${id}`, 'PUT', data);
+        closeModal();
+        await loadAllData();
+        renderActivities();
+    });
+}
+
+async function deleteActivity(id) {
+    if (!confirm('Are you sure you want to delete this activity?')) return;
+    await apiCall(`activities/${id}`, 'DELETE');
+    await loadAllData();
+    renderActivities();
 }
 
 function showAddActivityModal() {
