@@ -12,6 +12,13 @@ An internal CRM system for managing government department relationships with a s
 - **Contact Directory**: Store contacts by department with role categorization
 - **Engagement Activities**: Log meetings, emails, workshops, and incidents with table view
 - **Incident Management**: Track and resolve issues with severity levels
+- **Filter Bars**: Every data tab includes a filter bar for quick drill-down:
+  - Departments — Tier, Status, Owner Team, Search
+  - Applications — Department, Environment, Auth Type, Status, Search
+  - Integrations — Department, Stage, Status, Risk Level
+  - Contacts — Department, Role, Active, Search
+  - Activities — Department, Type, Owner, Date Range
+  - Incidents — Severity, Status, Application, Date Range
 - **AI Assistant**: Natural language queries powered by Google Gemini
 
 ## Tech Stack

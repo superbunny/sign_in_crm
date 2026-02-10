@@ -126,6 +126,37 @@
                 <h2>Departments</h2>
                 <button class="btn btn-primary" onclick="showAddDepartmentModal()">+ Add Department</button>
             </div>
+            <div class="filter-bar" id="filter-departments">
+                <div class="filter-group">
+                    <label>Tier</label>
+                    <select id="filter-dept-tier" onchange="renderDepartments()">
+                        <option value="">All Tiers</option>
+                        <option value="standard">Standard</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filter-dept-status" onchange="renderDepartments()">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Owner Team</label>
+                    <select id="filter-dept-owner" onchange="renderDepartments()">
+                        <option value="">All Teams</option>
+                    </select>
+                </div>
+                <div class="filter-separator"></div>
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="filter-dept-search" placeholder="Search departments..."
+                        oninput="renderDepartments()">
+                </div>
+                <button class="btn-reset" onclick="resetFilters('departments')">✕ Reset</button>
+            </div>
             <div class="table-container">
                 <table class="data-table" id="departments-table">
                     <thead>
@@ -150,6 +181,47 @@
                 <h2>Applications</h2>
                 <button class="btn btn-primary" onclick="showAddApplicationModal()">+ Add Application</button>
             </div>
+            <div class="filter-bar" id="filter-applications">
+                <div class="filter-group">
+                    <label>Department</label>
+                    <select id="filter-app-dept" onchange="renderApplications()">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Environment</label>
+                    <select id="filter-app-env" onchange="renderApplications()">
+                        <option value="">All Environments</option>
+                        <option value="prod">Production</option>
+                        <option value="test">Test</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Auth Type</label>
+                    <select id="filter-app-auth" onchange="renderApplications()">
+                        <option value="">All Auth Types</option>
+                        <option value="OIDC">OIDC</option>
+                        <option value="SAML">SAML</option>
+                        <option value="legacy">Legacy</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filter-app-status" onchange="renderApplications()">
+                        <option value="">All Statuses</option>
+                        <option value="integrating">Integrating</option>
+                        <option value="live">Live</option>
+                        <option value="deprecated">Deprecated</option>
+                    </select>
+                </div>
+                <div class="filter-separator"></div>
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="filter-app-search" placeholder="Search applications..."
+                        oninput="renderApplications()">
+                </div>
+                <button class="btn-reset" onclick="resetFilters('applications')">✕ Reset</button>
+            </div>
             <div class="table-container">
                 <table class="data-table" id="applications-table">
                     <thead>
@@ -173,6 +245,44 @@
             <div class="view-header">
                 <h2>Integration Status</h2>
                 <p class="view-subtitle">Track integration progress for all applications</p>
+            </div>
+            <div class="filter-bar" id="filter-integrations">
+                <div class="filter-group">
+                    <label>Department</label>
+                    <select id="filter-int-dept" onchange="renderIntegrations()">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Stage</label>
+                    <select id="filter-int-stage" onchange="renderIntegrations()">
+                        <option value="">All Stages</option>
+                        <option value="intake">Intake</option>
+                        <option value="design">Design</option>
+                        <option value="implementation">Implementation</option>
+                        <option value="testing">Testing</option>
+                        <option value="production">Production</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filter-int-status" onchange="renderIntegrations()">
+                        <option value="">All Statuses</option>
+                        <option value="on_track">On Track</option>
+                        <option value="blocked">Blocked</option>
+                        <option value="delayed">Delayed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Risk Level</label>
+                    <select id="filter-int-risk" onchange="renderIntegrations()">
+                        <option value="">All Risk Levels</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <button class="btn-reset" onclick="resetFilters('integrations')">✕ Reset</button>
             </div>
             <div class="table-container">
                 <table class="data-table" id="integrations-table">
@@ -199,6 +309,38 @@
                 <h2>Contacts</h2>
                 <button class="btn btn-primary" onclick="showAddContactModal()">+ Add Contact</button>
             </div>
+            <div class="filter-bar" id="filter-contacts">
+                <div class="filter-group">
+                    <label>Department</label>
+                    <select id="filter-con-dept" onchange="renderContacts()">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Role</label>
+                    <select id="filter-con-role" onchange="renderContacts()">
+                        <option value="">All Roles</option>
+                        <option value="business">Business</option>
+                        <option value="technical">Technical</option>
+                        <option value="security">Security</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Active</label>
+                    <select id="filter-con-active" onchange="renderContacts()">
+                        <option value="">All</option>
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                <div class="filter-separator"></div>
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="filter-con-search" placeholder="Search name or email..."
+                        oninput="renderContacts()">
+                </div>
+                <button class="btn-reset" onclick="resetFilters('contacts')">✕ Reset</button>
+            </div>
             <div class="table-container">
                 <table class="data-table" id="contacts-table">
                     <thead>
@@ -222,6 +364,40 @@
             <div class="view-header">
                 <h2>Engagement Activities</h2>
                 <button class="btn btn-primary" onclick="showAddActivityModal()">+ Add Activity</button>
+            </div>
+            <div class="filter-bar" id="filter-activities">
+                <div class="filter-group">
+                    <label>Department</label>
+                    <select id="filter-act-dept" onchange="renderActivities()">
+                        <option value="">All Departments</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Type</label>
+                    <select id="filter-act-type" onchange="renderActivities()">
+                        <option value="">All Types</option>
+                        <option value="meeting">Meeting</option>
+                        <option value="email">Email</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="incident">Incident</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Owner</label>
+                    <select id="filter-act-owner" onchange="renderActivities()">
+                        <option value="">All Owners</option>
+                    </select>
+                </div>
+                <div class="filter-separator"></div>
+                <div class="filter-group">
+                    <label>From</label>
+                    <input type="date" id="filter-act-date-from" onchange="renderActivities()">
+                </div>
+                <div class="filter-group">
+                    <label>To</label>
+                    <input type="date" id="filter-act-date-to" onchange="renderActivities()">
+                </div>
+                <button class="btn-reset" onclick="resetFilters('activities')">✕ Reset</button>
             </div>
             <div class="table-container">
                 <table class="data-table" id="activities-table">
@@ -247,6 +423,44 @@
             <div class="view-header">
                 <h2>Incidents</h2>
                 <button class="btn btn-primary" onclick="showAddIncidentModal()">+ Add Incident</button>
+            </div>
+            <div class="filter-bar" id="filter-incidents">
+                <div class="filter-group">
+                    <label>Severity</label>
+                    <select id="filter-inc-severity" onchange="renderIncidents()">
+                        <option value="">All Severities</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filter-inc-status" onchange="renderIncidents()">
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="investigating">Investigating</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Application</label>
+                    <select id="filter-inc-app" onchange="renderIncidents()">
+                        <option value="">All Applications</option>
+                    </select>
+                </div>
+                <div class="filter-separator"></div>
+                <div class="filter-group">
+                    <label>From</label>
+                    <input type="date" id="filter-inc-date-from" onchange="renderIncidents()">
+                </div>
+                <div class="filter-group">
+                    <label>To</label>
+                    <input type="date" id="filter-inc-date-to" onchange="renderIncidents()">
+                </div>
+                <button class="btn-reset" onclick="resetFilters('incidents')">✕ Reset</button>
             </div>
             <div class="table-container">
                 <table class="data-table" id="incidents-table">

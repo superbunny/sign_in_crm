@@ -73,6 +73,7 @@ async function loadAllData() {
             apiCall('activities'),
             apiCall('incidents')
         ]);
+        populateDynamicFilters();
     } catch (error) {
         console.error('Error loading data:', error);
     }
@@ -103,8 +104,21 @@ async function loadDashboard() {
 
 // ==================== DEPARTMENTS ====================
 function renderDepartments() {
+    const tierFilter = document.getElementById('filter-dept-tier')?.value || '';
+    const statusFilter = document.getElementById('filter-dept-status')?.value || '';
+    const ownerFilter = document.getElementById('filter-dept-owner')?.value || '';
+    const searchFilter = (document.getElementById('filter-dept-search')?.value || '').toLowerCase();
+
+    let filtered = departments.filter(d => {
+        if (tierFilter && d.tier !== tierFilter) return false;
+        if (statusFilter && d.status !== statusFilter) return false;
+        if (ownerFilter && d.owner_team !== ownerFilter) return false;
+        if (searchFilter && !(d.name || '').toLowerCase().includes(searchFilter) && !(d.short_name || '').toLowerCase().includes(searchFilter)) return false;
+        return true;
+    });
+
     const tbody = document.querySelector('#departments-table tbody');
-    tbody.innerHTML = departments.map(d => `
+    tbody.innerHTML = filtered.map(d => `
         <tr>
             <td><strong>${d.name}</strong></td>
             <td>${d.short_name || '-'}</td>
@@ -228,8 +242,23 @@ async function deleteDepartment(id) {
 
 // ==================== APPLICATIONS ====================
 function renderApplications() {
+    const deptFilter = document.getElementById('filter-app-dept')?.value || '';
+    const envFilter = document.getElementById('filter-app-env')?.value || '';
+    const authFilter = document.getElementById('filter-app-auth')?.value || '';
+    const statusFilter = document.getElementById('filter-app-status')?.value || '';
+    const searchFilter = (document.getElementById('filter-app-search')?.value || '').toLowerCase();
+
+    let filtered = applications.filter(a => {
+        if (deptFilter && String(a.department_id) !== deptFilter) return false;
+        if (envFilter && a.environment !== envFilter) return false;
+        if (authFilter && a.auth_type !== authFilter) return false;
+        if (statusFilter && a.status !== statusFilter) return false;
+        if (searchFilter && !(a.app_name || '').toLowerCase().includes(searchFilter)) return false;
+        return true;
+    });
+
     const tbody = document.querySelector('#applications-table tbody');
-    tbody.innerHTML = applications.map(a => `
+    tbody.innerHTML = filtered.map(a => `
         <tr>
             <td><strong>${a.app_name}</strong></td>
             <td>${a.department_name || '-'}</td>
@@ -377,8 +406,21 @@ async function deleteApplication(id) {
 
 // ==================== INTEGRATIONS ====================
 function renderIntegrations() {
+    const deptFilter = document.getElementById('filter-int-dept')?.value || '';
+    const stageFilter = document.getElementById('filter-int-stage')?.value || '';
+    const statusFilter = document.getElementById('filter-int-status')?.value || '';
+    const riskFilter = document.getElementById('filter-int-risk')?.value || '';
+
+    let filtered = integrations.filter(i => {
+        if (deptFilter && String(i.department_id) !== deptFilter) return false;
+        if (stageFilter && i.stage !== stageFilter) return false;
+        if (statusFilter && i.status !== statusFilter) return false;
+        if (riskFilter && i.risk_level !== riskFilter) return false;
+        return true;
+    });
+
     const tbody = document.querySelector('#integrations-table tbody');
-    tbody.innerHTML = integrations.map(i => `
+    tbody.innerHTML = filtered.map(i => `
         <tr>
             <td><strong>${i.app_name || '-'}</strong></td>
             <td>${i.department_name || '-'}</td>
@@ -454,8 +496,21 @@ async function editIntegration(id) {
 
 // ==================== CONTACTS ====================
 function renderContacts() {
+    const deptFilter = document.getElementById('filter-con-dept')?.value || '';
+    const roleFilter = document.getElementById('filter-con-role')?.value || '';
+    const activeFilter = document.getElementById('filter-con-active')?.value || '';
+    const searchFilter = (document.getElementById('filter-con-search')?.value || '').toLowerCase();
+
+    let filtered = contacts.filter(c => {
+        if (deptFilter && String(c.department_id) !== deptFilter) return false;
+        if (roleFilter && c.role !== roleFilter) return false;
+        if (activeFilter !== '' && String(c.active_flag ? 1 : 0) !== activeFilter) return false;
+        if (searchFilter && !(c.name || '').toLowerCase().includes(searchFilter) && !(c.email || '').toLowerCase().includes(searchFilter)) return false;
+        return true;
+    });
+
     const tbody = document.querySelector('#contacts-table tbody');
-    tbody.innerHTML = contacts.map(c => `
+    tbody.innerHTML = filtered.map(c => `
         <tr>
             <td><strong>${c.name}</strong></td>
             <td>${c.department_name || '-'}</td>
@@ -579,8 +634,23 @@ async function deleteContact(id) {
 
 // ==================== ACTIVITIES ====================
 function renderActivities() {
+    const deptFilter = document.getElementById('filter-act-dept')?.value || '';
+    const typeFilter = document.getElementById('filter-act-type')?.value || '';
+    const ownerFilter = document.getElementById('filter-act-owner')?.value || '';
+    const dateFrom = document.getElementById('filter-act-date-from')?.value || '';
+    const dateTo = document.getElementById('filter-act-date-to')?.value || '';
+
+    let filtered = activities.filter(a => {
+        if (deptFilter && String(a.department_id) !== deptFilter) return false;
+        if (typeFilter && a.type !== typeFilter) return false;
+        if (ownerFilter && a.owner !== ownerFilter) return false;
+        if (dateFrom && a.date && a.date < dateFrom) return false;
+        if (dateTo && a.date && a.date > dateTo) return false;
+        return true;
+    });
+
     const tbody = document.querySelector('#activities-table tbody');
-    tbody.innerHTML = activities.map(a => `
+    tbody.innerHTML = filtered.map(a => `
         <tr>
             <td>${a.date || '-'}</td>
             <td><span class="badge badge-${a.type}">${a.type}</span></td>
@@ -735,8 +805,23 @@ function showAddActivityModal() {
 
 // ==================== INCIDENTS ====================
 function renderIncidents() {
+    const severityFilter = document.getElementById('filter-inc-severity')?.value || '';
+    const statusFilter = document.getElementById('filter-inc-status')?.value || '';
+    const appFilter = document.getElementById('filter-inc-app')?.value || '';
+    const dateFrom = document.getElementById('filter-inc-date-from')?.value || '';
+    const dateTo = document.getElementById('filter-inc-date-to')?.value || '';
+
+    let filtered = incidents.filter(i => {
+        if (severityFilter && i.severity !== severityFilter) return false;
+        if (statusFilter && i.status !== statusFilter) return false;
+        if (appFilter && String(i.app_id) !== appFilter) return false;
+        if (dateFrom && i.created_at && i.created_at.split('T')[0] < dateFrom) return false;
+        if (dateTo && i.created_at && i.created_at.split('T')[0] > dateTo) return false;
+        return true;
+    });
+
     const tbody = document.querySelector('#incidents-table tbody');
-    tbody.innerHTML = incidents.map(i => `
+    tbody.innerHTML = filtered.map(i => `
         <tr>
             <td>#${i.incident_id}</td>
             <td><strong>${i.app_name || '-'}</strong><br><small>${i.department_name || ''}</small></td>
@@ -1119,6 +1204,78 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ==================== FILTERS ====================
+function populateDynamicFilters() {
+    // Helper to populate a select with options preserving current selection
+    function populateSelect(selectId, items, valueFn, labelFn) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const currentValue = select.value;
+        const firstOption = select.options[0]; // "All ..." option
+        select.innerHTML = '';
+        select.appendChild(firstOption);
+        const seen = new Set();
+        items.forEach(item => {
+            const val = valueFn(item);
+            const label = labelFn(item);
+            if (val && !seen.has(val)) {
+                seen.add(val);
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = label;
+                select.appendChild(opt);
+            }
+        });
+        select.value = currentValue; // Restore selection
+    }
+
+    // Departments tab: Owner Team (dynamic from data)
+    populateSelect('filter-dept-owner', departments, d => d.owner_team, d => d.owner_team);
+
+    // Applications tab: Department dropdown
+    populateSelect('filter-app-dept', departments, d => String(d.department_id), d => d.name);
+
+    // Integrations tab: Department dropdown
+    populateSelect('filter-int-dept', departments, d => String(d.department_id), d => d.name);
+
+    // Contacts tab: Department dropdown
+    populateSelect('filter-con-dept', departments, d => String(d.department_id), d => d.name);
+
+    // Activities tab: Department + Owner (dynamic)
+    populateSelect('filter-act-dept', departments, d => String(d.department_id), d => d.name);
+    populateSelect('filter-act-owner', activities, a => a.owner, a => a.owner);
+
+    // Incidents tab: Application dropdown
+    populateSelect('filter-inc-app', applications, a => String(a.app_id), a => a.app_name);
+}
+
+function resetFilters(tab) {
+    const filterIds = {
+        departments: ['filter-dept-tier', 'filter-dept-status', 'filter-dept-owner', 'filter-dept-search'],
+        applications: ['filter-app-dept', 'filter-app-env', 'filter-app-auth', 'filter-app-status', 'filter-app-search'],
+        integrations: ['filter-int-dept', 'filter-int-stage', 'filter-int-status', 'filter-int-risk'],
+        contacts: ['filter-con-dept', 'filter-con-role', 'filter-con-active', 'filter-con-search'],
+        activities: ['filter-act-dept', 'filter-act-type', 'filter-act-owner', 'filter-act-date-from', 'filter-act-date-to'],
+        incidents: ['filter-inc-severity', 'filter-inc-status', 'filter-inc-app', 'filter-inc-date-from', 'filter-inc-date-to']
+    };
+
+    (filterIds[tab] || []).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    // Re-render the tab
+    const renderFns = {
+        departments: renderDepartments,
+        applications: renderApplications,
+        integrations: renderIntegrations,
+        contacts: renderContacts,
+        activities: renderActivities,
+        incidents: renderIncidents
+    };
+    if (renderFns[tab]) renderFns[tab]();
 }
 
 // ==================== MODAL ====================
