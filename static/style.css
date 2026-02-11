@@ -241,6 +241,7 @@ body {
     gap: var(--spacing-md);
     transition: all var(--transition-base);
     border-left: 4px solid var(--gc-gray-light);
+    cursor: pointer;
 }
 
 .stat-card:hover {

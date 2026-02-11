@@ -12,6 +12,7 @@ An internal CRM system for managing government department relationships with a s
 - **Contact Directory**: Store contacts by department with role categorization
 - **Engagement Activities**: Log meetings, emails, workshops, and incidents with table view
 - **Incident Management**: Track and resolve issues with severity levels
+- **Tag Management**: Centralized system for managing dropdown values and badges across the application
 - **Filter Bars**: Every data tab includes a filter bar for quick drill-down:
   - Departments — Tier, Status, Owner Team, Search
   - Applications — Department, Environment, Auth Type, Status, Search
@@ -109,6 +110,9 @@ gov-crm/
 | `/api/activities/<id>` | DELETE | Delete activity |
 | `/api/incidents` | GET, POST | Incidents CRUD |
 | `/api/incidents/<id>` | PUT | Update incident |
+| `/api/tags` | GET | Get all tag categories with tags |
+| `/api/tags/<category>` | GET, POST | Get/create tags in category |
+| `/api/tags/<tag_id>` | PUT, DELETE | Update/delete tag |
 | `/api/chat` | POST | AI chat (requires Gemini API key) |
 
 ## AI Assistant
@@ -137,6 +141,48 @@ The AI remembers your chat context for follow-up questions:
 
 ### Clear/New Chat
 Use the buttons in the chat header to reset the conversation.
+
+## Tag Management
+
+The Tag Management system provides a centralized way to manage dropdown values and badge colors throughout the application. This replaces hardcoded values with user-configurable options.
+
+### Features
+
+- **Centralized Configuration**: All dropdown values (tiers, statuses, roles, etc.) are managed in one place
+- **Custom Colors**: Assign hex colors to tags for consistent badge styling
+- **Soft Deletion**: Deactivate tags instead of deleting to preserve data integrity
+- **Sort Ordering**: Control the order tags appear in dropdowns
+- **Validation**: Prevents deletion of tags currently in use
+- **Dynamic UI**: Tag changes immediately reflect in all dropdowns and badges
+
+### Tag Categories
+
+The system includes predefined categories for:
+
+| Category | Entity | Field | Examples |
+|----------|--------|-------|----------|
+| `department_tier` | Department | tier | Standard, Critical |
+| `department_status` | Department | status | Active, Inactive |
+| `department_owner_team` | Department | owner_team | Team A, Team B |
+| `application_environment` | Application | environment | Production, Test |
+| `application_status` | Application | status | Live, Integrating, Deprecated |
+| `integration_stage` | Integration | stage | Intake, Design, Implementation, Testing, Production |
+| `contact_role` | Contact | role | Business, Technical, Security |
+| `activity_type` | Activity | type | Meeting, Email, Workshop, Incident |
+
+### Managing Tags
+
+1. Navigate to the **Tags** tab in the application
+2. Select a category from the dropdown
+3. Add, edit, or deactivate tags as needed
+4. Assign colors using hex codes (e.g., `#3498DB`)
+5. Reorder tags by adjusting sort order values
+
+### Tag Protection
+
+- Cannot delete the last active tag in a category
+- Cannot delete tags currently in use by records
+- Deactivate tags instead to hide them from dropdowns while preserving existing data
 
 ## Data Model
 

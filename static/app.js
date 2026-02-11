@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => switchView(btn.dataset.view));
     });
 
+    // Dashboard card click handlers
+    document.querySelector('.stat-departments')?.addEventListener('click', () => switchView('departments'));
+    document.querySelector('.stat-applications')?.addEventListener('click', () => switchView('applications'));
+    document.querySelector('.stat-risk')?.addEventListener('click', () => switchView('integrations'));
+    document.querySelector('.stat-incidents')?.addEventListener('click', () => switchView('incidents'));
+
     // Chat handlers
     document.getElementById('chat-send').addEventListener('click', sendChatMessage);
     document.getElementById('chat-input').addEventListener('keypress', (e) => {
