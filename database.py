@@ -2,6 +2,7 @@ from datetime import datetime, date, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import Base, Department, Application, IntegrationStatus, Contact, EngagementActivity, Incident
+from tag_models import TagCategory, Tag
 import config
 
 
@@ -18,8 +19,147 @@ def get_session(engine):
     return Session()
 
 
+def seed_tags(session):
+    """Seed tag categories and default tag values."""
+    
+    # Check if tags already exist
+    if session.query(TagCategory).first():
+        return
+    
+    print("Seeding tag categories and values...")
+    
+    # Define tag categories and their default values
+    tag_data = [
+        {
+            'name': 'department_tier',
+            'display_name': 'Department Tier',
+            'description': 'Service priority level for departments',
+            'entity_type': 'department',
+            'field_name': 'tier',
+            'tags': [
+                {'value': 'critical', 'label': 'Critical', 'color': '#E74C3C', 'sort_order': 1},
+                {'value': 'standard', 'label': 'Standard', 'color': '#3498DB', 'sort_order': 2},
+            ]
+        },
+        {
+            'name': 'department_status',
+            'display_name': 'Department Status',
+            'description': 'Operational state of departments',
+            'entity_type': 'department',
+            'field_name': 'status',
+            'tags': [
+                {'value': 'active', 'label': 'Active', 'color': '#27AE60', 'sort_order': 1},
+                {'value': 'inactive', 'label': 'Inactive', 'color': '#95A5A6', 'sort_order': 2},
+            ]
+        },
+        {
+            'name': 'department_owner_team',
+            'display_name': 'Owner Team',
+            'description': 'Internal team responsible for department relationship',
+            'entity_type': 'department',
+            'field_name': 'owner_team',
+            'tags': [
+                {'value': 'Client Success Alpha', 'label': 'Client Success Alpha', 'color': '#9B59B6', 'sort_order': 1},
+                {'value': 'Client Success Beta', 'label': 'Client Success Beta', 'color': '#3498DB', 'sort_order': 2},
+                {'value': 'Client Success Gamma', 'label': 'Client Success Gamma', 'color': '#1ABC9C', 'sort_order': 3},
+            ]
+        },
+        {
+            'name': 'application_environment',
+            'display_name': 'Application Environment',
+            'description': 'Deployment stage for applications',
+            'entity_type': 'application',
+            'field_name': 'environment',
+            'tags': [
+                {'value': 'prod', 'label': 'Production', 'color': '#27AE60', 'sort_order': 1},
+                {'value': 'test', 'label': 'Test', 'color': '#F39C12', 'sort_order': 2},
+            ]
+        },
+        {
+            'name': 'application_status',
+            'display_name': 'Application Status',
+            'description': 'Integration state of applications',
+            'entity_type': 'application',
+            'field_name': 'status',
+            'tags': [
+                {'value': 'live', 'label': 'Live', 'color': '#27AE60', 'sort_order': 1},
+                {'value': 'integrating', 'label': 'Integrating', 'color': '#F39C12', 'sort_order': 2},
+                {'value': 'deprecated', 'label': 'Deprecated', 'color': '#95A5A6', 'sort_order': 3},
+            ]
+        },
+        {
+            'name': 'integration_stage',
+            'display_name': 'Integration Stage',
+            'description': 'Current phase in integration lifecycle',
+            'entity_type': 'integration',
+            'field_name': 'stage',
+            'tags': [
+                {'value': 'intake', 'label': 'Intake', 'color': '#3498DB', 'sort_order': 1},
+                {'value': 'design', 'label': 'Design', 'color': '#9B59B6', 'sort_order': 2},
+                {'value': 'implementation', 'label': 'Implementation', 'color': '#F39C12', 'sort_order': 3},
+                {'value': 'testing', 'label': 'Testing', 'color': '#E67E22', 'sort_order': 4},
+                {'value': 'production', 'label': 'Production', 'color': '#27AE60', 'sort_order': 5},
+            ]
+        },
+        {
+            'name': 'contact_role',
+            'display_name': 'Contact Role',
+            'description': 'Function or responsibility of contact',
+            'entity_type': 'contact',
+            'field_name': 'role',
+            'tags': [
+                {'value': 'business', 'label': 'Business', 'color': '#3498DB', 'sort_order': 1},
+                {'value': 'technical', 'label': 'Technical', 'color': '#9B59B6', 'sort_order': 2},
+                {'value': 'security', 'label': 'Security', 'color': '#E74C3C', 'sort_order': 3},
+            ]
+        },
+        {
+            'name': 'activity_type',
+            'display_name': 'Activity Type',
+            'description': 'Kind of engagement activity',
+            'entity_type': 'activity',
+            'field_name': 'type',
+            'tags': [
+                {'value': 'meeting', 'label': 'Meeting', 'color': '#3498DB', 'sort_order': 1},
+                {'value': 'email', 'label': 'Email', 'color': '#1ABC9C', 'sort_order': 2},
+                {'value': 'workshop', 'label': 'Workshop', 'color': '#9B59B6', 'sort_order': 3},
+                {'value': 'incident', 'label': 'Incident', 'color': '#E74C3C', 'sort_order': 4},
+            ]
+        },
+    ]
+    
+    # Create categories and tags
+    for cat_data in tag_data:
+        category = TagCategory(
+            name=cat_data['name'],
+            display_name=cat_data['display_name'],
+            description=cat_data['description'],
+            entity_type=cat_data['entity_type'],
+            field_name=cat_data['field_name']
+        )
+        session.add(category)
+        session.flush()
+        
+        for tag_info in cat_data['tags']:
+            tag = Tag(
+                category_id=category.category_id,
+                value=tag_info['value'],
+                label=tag_info['label'],
+                color=tag_info['color'],
+                sort_order=tag_info['sort_order']
+            )
+            session.add(tag)
+    
+    session.commit()
+    print("Tag categories and values seeded successfully!")
+
+
+
 def seed_data(session):
     """Seed the database with sample data."""
+    
+    # Seed tags first
+    seed_tags(session)
     
     # Check if data already exists
     if session.query(Department).first():

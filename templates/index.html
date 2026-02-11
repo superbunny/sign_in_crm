@@ -33,6 +33,7 @@
                 <button class="nav-btn" data-view="contacts">Contacts</button>
                 <button class="nav-btn" data-view="activities">Activities</button>
                 <button class="nav-btn" data-view="incidents">Incidents</button>
+                <button class="nav-btn" data-view="tags">Tags</button>
             </nav>
         </div>
     </header>
@@ -478,6 +479,49 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- Tag Management View -->
+        <section id="view-tags" class="view">
+            <div class="view-header">
+                <h2>Tag Management</h2>
+                <p class="view-subtitle">Manage tag values for dropdowns across the system</p>
+            </div>
+            
+            <div class="tag-management-container">
+                <div class="tag-category-selector">
+                    <label for="tag-category-select"><strong>Select Category:</strong></label>
+                    <select id="tag-category-select" onchange="loadTagsForCategory()">
+                        <option value="">-- Select a category --</option>
+                    </select>
+                </div>
+
+                <div id="tag-category-info" class="tag-category-info" style="display: none;">
+                    <h3 id="tag-category-title"></h3>
+                    <p id="tag-category-description"></p>
+                    <button class="btn btn-primary" onclick="showAddTagModal()">+ Add Tag</button>
+                </div>
+
+                <div id="tags-table-container" class="table-container" style="display: none;">
+                    <table class="data-table" id="tags-table">
+                        <thead>
+                            <tr>
+                                <th>Label</th>
+                                <th>Value</th>
+                                <th>Color</th>
+                                <th>Status</th>
+                                <th>Sort Order</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div id="no-category-selected" class="empty-state">
+                    <p>👈 Select a category to manage its tags</p>
+                </div>
             </div>
         </section>
     </main>

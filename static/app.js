@@ -73,10 +73,51 @@ async function loadAllData() {
             apiCall('activities'),
             apiCall('incidents')
         ]);
+        await loadTagColors(); // Load tag colors for rendering
         populateDynamicFilters();
     } catch (error) {
         console.error('Error loading data:', error);
     }
+}
+
+// ==================== TAG COLOR MAPPING ====================
+let tagColorMap = {}; // Cache for tag colors
+
+async function loadTagColors() {
+    try {
+        const allTags = await apiCall('tags');
+        tagColorMap = {};
+
+        // Build a map of category_value -> color
+        allTags.forEach(category => {
+            if (category.tags) {
+                category.tags.forEach(tag => {
+                    const key = `${category.name}_${tag.value}`;
+                    tagColorMap[key] = {
+                        color: tag.color || '#3498DB',
+                        label: tag.label || tag.value
+                    };
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error loading tag colors:', error);
+    }
+}
+
+// Helper function to render a tag with its color
+function renderTagBadge(categoryName, value) {
+    if (!value) return '-';
+
+    const key = `${categoryName}_${value}`;
+    const tagInfo = tagColorMap[key];
+
+    if (tagInfo) {
+        return `<span class="tag-badge" style="background-color: ${tagInfo.color}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${tagInfo.label}</span>`;
+    }
+
+    // Fallback to regular badge if tag not found
+    return `<span class="badge badge-${value}">${value}</span>`;
 }
 
 // ==================== DASHBOARD ====================
@@ -122,9 +163,9 @@ function renderDepartments() {
         <tr>
             <td><strong>${d.name}</strong></td>
             <td>${d.short_name || '-'}</td>
-            <td><span class="badge badge-${d.tier}">${d.tier}</span></td>
-            <td><span class="badge badge-${d.status}">${d.status}</span></td>
-            <td>${d.owner_team || '-'}</td>
+            <td>${renderTagBadge('department_tier', d.tier)}</td>
+            <td>${renderTagBadge('department_status', d.status)}</td>
+            <td>${renderTagBadge('department_owner_team', d.owner_team)}</td>
             <td>${d.app_count || 0}</td>
             <td class="action-btns">
                 <button class="btn btn-secondary btn-sm" onclick="editDepartment(${d.department_id})">Edit</button>
@@ -134,7 +175,28 @@ function renderDepartments() {
     `).join('');
 }
 
-function showAddDepartmentModal() {
+// Helper function to build dropdown options from tags
+async function buildTagOptions(categoryName, selectedValue = '') {
+    try {
+        const response = await apiCall(`tags/${categoryName}`);
+        const tags = response.tags || [];
+        return tags
+            .filter(tag => tag.is_active)
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map(tag => `<option value="${tag.value}" ${tag.value === selectedValue ? 'selected' : ''}>${tag.label}</option>`)
+            .join('');
+    } catch (error) {
+        console.error(`Error loading tags for ${categoryName}:`, error);
+        return '';
+    }
+}
+
+async function showAddDepartmentModal() {
+    // Load tag options
+    const tierOptions = await buildTagOptions('department_tier', 'standard');
+    const statusOptions = await buildTagOptions('department_status', 'active');
+    const ownerOptions = await buildTagOptions('department_owner_team');
+
     showModal('Add Department', `
         <form id="department-form">
             <div class="form-group">
@@ -148,20 +210,21 @@ function showAddDepartmentModal() {
             <div class="form-group">
                 <label>Tier</label>
                 <select name="tier">
-                    <option value="standard">Standard</option>
-                    <option value="critical">Critical</option>
+                    ${tierOptions}
                 </select>
             </div>
             <div class="form-group">
                 <label>Status</label>
                 <select name="status">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    ${statusOptions}
                 </select>
             </div>
             <div class="form-group">
                 <label>Owner Team</label>
-                <input type="text" name="owner_team">
+                <select name="owner_team">
+                    <option value="">-- Select Team --</option>
+                    ${ownerOptions}
+                </select>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -186,6 +249,11 @@ async function editDepartment(id) {
     const dept = departments.find(d => d.department_id === id);
     if (!dept) return;
 
+    // Load tag options with current values selected
+    const tierOptions = await buildTagOptions('department_tier', dept.tier);
+    const statusOptions = await buildTagOptions('department_status', dept.status);
+    const ownerOptions = await buildTagOptions('department_owner_team', dept.owner_team);
+
     showModal('Edit Department', `
         <form id="department-form">
             <div class="form-group">
@@ -199,20 +267,21 @@ async function editDepartment(id) {
             <div class="form-group">
                 <label>Tier</label>
                 <select name="tier">
-                    <option value="standard" ${dept.tier === 'standard' ? 'selected' : ''}>Standard</option>
-                    <option value="critical" ${dept.tier === 'critical' ? 'selected' : ''}>Critical</option>
+                    ${tierOptions}
                 </select>
             </div>
             <div class="form-group">
                 <label>Status</label>
                 <select name="status">
-                    <option value="active" ${dept.status === 'active' ? 'selected' : ''}>Active</option>
-                    <option value="inactive" ${dept.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                    ${statusOptions}
                 </select>
             </div>
             <div class="form-group">
                 <label>Owner Team</label>
-                <input type="text" name="owner_team" value="${dept.owner_team || ''}">
+                <select name="owner_team">
+                    <option value="">-- Select Team --</option>
+                    ${ownerOptions}
+                </select>
             </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -262,9 +331,9 @@ function renderApplications() {
         <tr>
             <td><strong>${a.app_name}</strong></td>
             <td>${a.department_name || '-'}</td>
-            <td><span class="badge badge-${a.environment}">${a.environment}</span></td>
+            <td>${renderTagBadge('application_environment', a.environment)}</td>
             <td>${a.auth_type}</td>
-            <td><span class="badge badge-${a.status}">${a.status}</span></td>
+            <td>${renderTagBadge('application_status', a.status)}</td>
             <td>${a.go_live_date || '-'}</td>
             <td class="action-btns">
                 <button class="btn btn-secondary btn-sm" onclick="editApplication(${a.app_id})">Edit</button>
@@ -274,8 +343,12 @@ function renderApplications() {
     `).join('');
 }
 
-function showAddApplicationModal() {
+async function showAddApplicationModal() {
     const deptOptions = departments.map(d => `<option value="${d.department_id}">${d.name}</option>`).join('');
+
+    // Load tag options
+    const envOptions = await buildTagOptions('application_environment', 'prod');
+    const statusOptions = await buildTagOptions('application_status', 'integrating');
 
     showModal('Add Application', `
         <form id="application-form">
@@ -290,8 +363,7 @@ function showAddApplicationModal() {
             <div class="form-group">
                 <label>Environment</label>
                 <select name="environment">
-                    <option value="prod">Production</option>
-                    <option value="test">Test</option>
+                    ${envOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -305,9 +377,7 @@ function showAddApplicationModal() {
             <div class="form-group">
                 <label>Status</label>
                 <select name="status">
-                    <option value="integrating">Integrating</option>
-                    <option value="live">Live</option>
-                    <option value="deprecated">Deprecated</option>
+                    ${statusOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -341,6 +411,10 @@ async function editApplication(id) {
         `<option value="${d.department_id}" ${d.department_id === app.department_id ? 'selected' : ''}>${d.name}</option>`
     ).join('');
 
+    // Load tag options with current values selected
+    const envOptions = await buildTagOptions('application_environment', app.environment);
+    const statusOptions = await buildTagOptions('application_status', app.status);
+
     showModal('Edit Application', `
         <form id="application-form">
             <div class="form-group">
@@ -354,8 +428,7 @@ async function editApplication(id) {
             <div class="form-group">
                 <label>Environment</label>
                 <select name="environment">
-                    <option value="prod" ${app.environment === 'prod' ? 'selected' : ''}>Production</option>
-                    <option value="test" ${app.environment === 'test' ? 'selected' : ''}>Test</option>
+                    ${envOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -369,9 +442,7 @@ async function editApplication(id) {
             <div class="form-group">
                 <label>Status</label>
                 <select name="status">
-                    <option value="integrating" ${app.status === 'integrating' ? 'selected' : ''}>Integrating</option>
-                    <option value="live" ${app.status === 'live' ? 'selected' : ''}>Live</option>
-                    <option value="deprecated" ${app.status === 'deprecated' ? 'selected' : ''}>Deprecated</option>
+                    ${statusOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -424,7 +495,7 @@ function renderIntegrations() {
         <tr>
             <td><strong>${i.app_name || '-'}</strong></td>
             <td>${i.department_name || '-'}</td>
-            <td><span class="badge badge-${i.stage}">${i.stage}</span></td>
+            <td>${renderTagBadge('integration_stage', i.stage)}</td>
             <td><span class="badge badge-${i.status}">${i.status.replace('_', ' ')}</span></td>
             <td><span class="badge badge-${i.risk_level}">${i.risk_level}</span></td>
             <td>${i.last_updated ? new Date(i.last_updated).toLocaleDateString() : '-'}</td>
@@ -440,6 +511,9 @@ async function editIntegration(id) {
     const integ = integrations.find(i => i.integration_id === id);
     if (!integ) return;
 
+    // Load tag options with current value selected
+    const stageOptions = await buildTagOptions('integration_stage', integ.stage);
+
     showModal('Update Integration Status', `
         <form id="integration-form">
             <p><strong>Application:</strong> ${integ.app_name}</p>
@@ -448,11 +522,7 @@ async function editIntegration(id) {
             <div class="form-group">
                 <label>Stage</label>
                 <select name="stage">
-                    <option value="intake" ${integ.stage === 'intake' ? 'selected' : ''}>Intake</option>
-                    <option value="design" ${integ.stage === 'design' ? 'selected' : ''}>Design</option>
-                    <option value="implementation" ${integ.stage === 'implementation' ? 'selected' : ''}>Implementation</option>
-                    <option value="testing" ${integ.stage === 'testing' ? 'selected' : ''}>Testing</option>
-                    <option value="production" ${integ.stage === 'production' ? 'selected' : ''}>Production</option>
+                    ${stageOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -514,7 +584,7 @@ function renderContacts() {
         <tr>
             <td><strong>${c.name}</strong></td>
             <td>${c.department_name || '-'}</td>
-            <td><span class="badge badge-${c.role}">${c.role || '-'}</span></td>
+            <td>${renderTagBadge('contact_role', c.role)}</td>
             <td><a href="mailto:${c.email}">${c.email || '-'}</a></td>
             <td>${c.phone || '-'}</td>
             <td><span class="badge badge-${c.active_flag ? 'active' : 'inactive'}">${c.active_flag ? 'Yes' : 'No'}</span></td>
@@ -526,8 +596,11 @@ function renderContacts() {
     `).join('');
 }
 
-function showAddContactModal() {
+async function showAddContactModal() {
     const deptOptions = departments.map(d => `<option value="${d.department_id}">${d.name}</option>`).join('');
+
+    // Load tag options
+    const roleOptions = await buildTagOptions('contact_role');
 
     showModal('Add Contact', `
         <form id="contact-form">
@@ -542,9 +615,8 @@ function showAddContactModal() {
             <div class="form-group">
                 <label>Role</label>
                 <select name="role">
-                    <option value="business">Business</option>
-                    <option value="technical">Technical</option>
-                    <option value="security">Security</option>
+                    <option value="">-- Select Role --</option>
+                    ${roleOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -581,6 +653,9 @@ async function editContact(id) {
         `<option value="${d.department_id}" ${d.department_id === contact.department_id ? 'selected' : ''}>${d.name}</option>`
     ).join('');
 
+    // Load tag options with current value selected
+    const roleOptions = await buildTagOptions('contact_role', contact.role);
+
     showModal('Edit Contact', `
         <form id="contact-form">
             <div class="form-group">
@@ -594,9 +669,8 @@ async function editContact(id) {
             <div class="form-group">
                 <label>Role</label>
                 <select name="role">
-                    <option value="business" ${contact.role === 'business' ? 'selected' : ''}>Business</option>
-                    <option value="technical" ${contact.role === 'technical' ? 'selected' : ''}>Technical</option>
-                    <option value="security" ${contact.role === 'security' ? 'selected' : ''}>Security</option>
+                    <option value="">-- Select Role --</option>
+                    ${roleOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -653,7 +727,7 @@ function renderActivities() {
     tbody.innerHTML = filtered.map(a => `
         <tr>
             <td>${a.date || '-'}</td>
-            <td><span class="badge badge-${a.type}">${a.type}</span></td>
+            <td>${renderTagBadge('activity_type', a.type)}</td>
             <td><strong>${a.department_name || '-'}</strong></td>
             <td>${a.app_name || '-'}</td>
             <td>${a.summary || '-'}</td>
@@ -678,6 +752,9 @@ async function editActivity(id) {
         `<option value="${a.app_id}" ${a.app_id === activity.app_id ? 'selected' : ''}>${a.app_name} (${a.department_name})</option>`
     ).join('');
 
+    // Load tag options with current value selected
+    const typeOptions = await buildTagOptions('activity_type', activity.type);
+
     showModal('Edit Activity', `
         <form id="activity-form">
             <div class="form-group">
@@ -694,10 +771,7 @@ async function editActivity(id) {
             <div class="form-group">
                 <label>Type *</label>
                 <select name="type" required>
-                    <option value="meeting" ${activity.type === 'meeting' ? 'selected' : ''}>Meeting</option>
-                    <option value="email" ${activity.type === 'email' ? 'selected' : ''}>Email</option>
-                    <option value="workshop" ${activity.type === 'workshop' ? 'selected' : ''}>Workshop</option>
-                    <option value="incident" ${activity.type === 'incident' ? 'selected' : ''}>Incident</option>
+                    ${typeOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -742,9 +816,12 @@ async function deleteActivity(id) {
     renderActivities();
 }
 
-function showAddActivityModal() {
+async function showAddActivityModal() {
     const deptOptions = departments.map(d => `<option value="${d.department_id}">${d.name}</option>`).join('');
     const appOptions = applications.map(a => `<option value="${a.app_id}">${a.app_name} (${a.department_name})</option>`).join('');
+
+    // Load tag options
+    const typeOptions = await buildTagOptions('activity_type', 'meeting');
 
     showModal('Add Activity', `
         <form id="activity-form">
@@ -762,10 +839,7 @@ function showAddActivityModal() {
             <div class="form-group">
                 <label>Type *</label>
                 <select name="type" required>
-                    <option value="meeting">Meeting</option>
-                    <option value="email">Email</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="incident">Incident</option>
+                    ${typeOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -1297,4 +1371,232 @@ document.getElementById('modal-overlay').addEventListener('click', (e) => {
 // Close modal on Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
+});
+
+// ==================== TAG MANAGEMENT ====================
+let tagCategories = [];
+let currentCategory = null;
+let currentCategoryTags = [];
+
+// Load all tag categories on page load
+async function loadTagCategories() {
+    try {
+        tagCategories = await apiCall('tags');
+        populateTagCategorySelector();
+    } catch (error) {
+        console.error('Error loading tag categories:', error);
+    }
+}
+
+function populateTagCategorySelector() {
+    const select = document.getElementById('tag-category-select');
+    if (!select) return;
+
+    // Map entity types to user-friendly tab names
+    const entityTypeToTab = {
+        'department': 'Department',
+        'application': 'Application',
+        'integration': 'Integration',
+        'contact': 'Contact',
+        'activity': 'Activity'
+    };
+
+    const options = tagCategories.map(cat => {
+        const tabName = entityTypeToTab[cat.entity_type] || cat.entity_type;
+        // Extract field name from display_name (e.g., "Department Tier" -> "Tier")
+        const fieldName = cat.display_name.replace(new RegExp(`^${tabName}\\s+`, 'i'), '');
+        const formattedLabel = `${tabName} - ${fieldName}`;
+
+        return `<option value="${cat.name}">${formattedLabel}</option>`;
+    }).join('');
+
+    select.innerHTML = '<option value="">-- Select a category --</option>' + options;
+}
+
+async function loadTagsForCategory() {
+    const select = document.getElementById('tag-category-select');
+    const categoryName = select?.value;
+
+    if (!categoryName) {
+        document.getElementById('tag-category-info').style.display = 'none';
+        document.getElementById('tags-table-container').style.display = 'none';
+        document.getElementById('no-category-selected').style.display = 'block';
+        return;
+    }
+
+    try {
+        const response = await apiCall(`tags/${categoryName}`);
+        currentCategory = response.category;
+        currentCategoryTags = response.tags;
+
+        // Update UI
+        document.getElementById('tag-category-title').textContent = currentCategory.display_name;
+        document.getElementById('tag-category-description').textContent = currentCategory.description;
+        document.getElementById('tag-category-info').style.display = 'block';
+        document.getElementById('tags-table-container').style.display = 'block';
+        document.getElementById('no-category-selected').style.display = 'none';
+
+        renderTagsTable();
+    } catch (error) {
+        console.error('Error loading tags for category:', error);
+    }
+}
+
+function renderTagsTable() {
+    const tbody = document.querySelector('#tags-table tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = currentCategoryTags.map(tag => `
+        <tr>
+            <td><strong>${tag.label}</strong></td>
+            <td><code>${tag.value}</code></td>
+            <td>
+                <span class="tag-color-badge" style="background-color: ${tag.color}; color: white; padding: 4px 12px; border-radius: 4px;">
+                    ${tag.color}
+                </span>
+            </td>
+            <td>
+                <span class="badge badge-${tag.is_active ? 'active' : 'inactive'}">
+                    ${tag.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>${tag.sort_order}</td>
+            <td class="action-btns">
+                <button class="btn btn-secondary btn-sm" onclick="editTag(${tag.tag_id})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteTag(${tag.tag_id})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function showAddTagModal() {
+    if (!currentCategory) return;
+
+    showModal('Add Tag', `
+        <form id="tag-form">
+            <p><strong>Category:</strong> ${currentCategory.display_name}</p>
+            <hr style="margin: 1rem 0;">
+            <div class="form-group">
+                <label>Label (Display Name) *</label>
+                <input type="text" name="label" required placeholder="e.g., High Priority">
+            </div>
+            <div class="form-group">
+                <label>Value (Internal) *</label>
+                <input type="text" name="value" required placeholder="e.g., high_priority">
+                <small>Used in database. Use lowercase with underscores.</small>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <input type="color" name="color" value="#3498DB">
+            </div>
+            <div class="form-group">
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" value="${currentCategoryTags.length + 1}">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    `);
+
+    document.getElementById('tag-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+
+        try {
+            await apiCall(`tags/${currentCategory.name}`, 'POST', data);
+            closeModal();
+            await loadTagsForCategory();
+            alert('Tag created successfully!');
+        } catch (error) {
+            alert('Error creating tag: ' + (error.message || 'Unknown error'));
+        }
+    });
+}
+
+async function editTag(tagId) {
+    const tag = currentCategoryTags.find(t => t.tag_id === tagId);
+    if (!tag) return;
+
+    showModal('Edit Tag', `
+        <form id="tag-form">
+            <p><strong>Category:</strong> ${currentCategory.display_name}</p>
+            <hr style="margin: 1rem 0;">
+            <div class="form-group">
+                <label>Label (Display Name) *</label>
+                <input type="text" name="label" value="${tag.label}" required>
+            </div>
+            <div class="form-group">
+                <label>Value (Internal) *</label>
+                <input type="text" name="value" value="${tag.value}" required>
+                <small>⚠️ Changing this may affect existing records</small>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <input type="color" name="color" value="${tag.color || '#3498DB'}">
+            </div>
+            <div class="form-group">
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" value="${tag.sort_order}">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="is_active" ${tag.is_active ? 'checked' : ''}>
+                    Active
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    `);
+
+    document.getElementById('tag-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        data.is_active = formData.has('is_active');
+
+        try {
+            await apiCall(`tags/${tagId}`, 'PUT', data);
+            closeModal();
+            await loadTagsForCategory();
+            alert('Tag updated successfully!');
+        } catch (error) {
+            alert('Error updating tag: ' + (error.message || 'Unknown error'));
+        }
+    });
+}
+
+async function deleteTag(tagId) {
+    if (!confirm('Are you sure you want to delete this tag? This action cannot be undone if the tag is not in use.')) return;
+
+    try {
+        const response = await fetch(`/api/tags/${tagId}`, { method: 'DELETE' });
+        const result = await response.json();
+
+        if (!response.ok) {
+            alert(result.error + (result.suggestion ? '\n\n' + result.suggestion : ''));
+            return;
+        }
+
+        await loadTagsForCategory();
+        alert('Tag deleted successfully!');
+    } catch (error) {
+        alert('Error deleting tag: ' + (error.message || 'Unknown error'));
+    }
+}
+
+// Load tag categories when switching to tags view
+document.addEventListener('DOMContentLoaded', () => {
+    const originalSwitchView = window.switchView;
+    window.switchView = function (viewName) {
+        originalSwitchView(viewName);
+        if (viewName === 'tags') {
+            loadTagCategories();
+        }
+    };
 });

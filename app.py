@@ -9,6 +9,7 @@ import google.generativeai as genai
 
 import config
 from models import Base, Department, Application, IntegrationStatus, Contact, EngagementActivity, Incident
+from tag_models import TagCategory, Tag
 from database import init_db, seed_data
 
 # Initialize Flask app
@@ -525,7 +526,178 @@ def update_incident(incident_id):
         session.close()
 
 
+# ==================== TAG MANAGEMENT API ====================
+
+@app.route('/api/tags', methods=['GET'])
+def get_all_tags():
+    """Get all tag categories with their tags."""
+    session = get_db_session()
+    try:
+        categories = session.query(TagCategory).all()
+        result = []
+        for category in categories:
+            cat_dict = category.to_dict()
+            cat_dict['tags'] = [tag.to_dict() for tag in category.tags if tag.is_active]
+            result.append(cat_dict)
+        return jsonify(result)
+    finally:
+        session.close()
+
+
+@app.route('/api/tags/<category_name>', methods=['GET'])
+def get_tags_by_category(category_name):
+    """Get tags for a specific category."""
+    session = get_db_session()
+    try:
+        category = session.query(TagCategory).filter_by(name=category_name).first()
+        if not category:
+            return jsonify({'error': 'Category not found'}), 404
+        
+        tags = [tag.to_dict() for tag in category.tags if tag.is_active]
+        return jsonify({
+            'category': category.to_dict(),
+            'tags': tags
+        })
+    finally:
+        session.close()
+
+
+@app.route('/api/tags/<category_name>', methods=['POST'])
+def create_tag(category_name):
+    """Create a new tag in a category."""
+    session = get_db_session()
+    try:
+        category = session.query(TagCategory).filter_by(name=category_name).first()
+        if not category:
+            return jsonify({'error': 'Category not found'}), 404
+        
+        data = request.json
+        
+        # Check if tag value already exists in this category
+        existing_tag = session.query(Tag).filter_by(
+            category_id=category.category_id,
+            value=data.get('value')
+        ).first()
+        
+        if existing_tag:
+            return jsonify({'error': 'Tag value already exists in this category'}), 400
+        
+        # Get max sort order
+        max_sort = session.query(func.max(Tag.sort_order)).filter_by(
+            category_id=category.category_id
+        ).scalar() or 0
+        
+        tag = Tag(
+            category_id=category.category_id,
+            value=data.get('value'),
+            label=data.get('label'),
+            color=data.get('color', '#3498DB'),
+            sort_order=data.get('sort_order', max_sort + 1)
+        )
+        session.add(tag)
+        session.commit()
+        return jsonify(tag.to_dict()), 201
+    finally:
+        session.close()
+
+
+@app.route('/api/tags/<int:tag_id>', methods=['PUT'])
+def update_tag(tag_id):
+    """Update an existing tag."""
+    session = get_db_session()
+    try:
+        tag = session.query(Tag).get(tag_id)
+        if not tag:
+            return jsonify({'error': 'Tag not found'}), 404
+        
+        data = request.json
+        
+        # Check for duplicate value if value is being changed
+        if 'value' in data and data['value'] != tag.value:
+            existing_tag = session.query(Tag).filter_by(
+                category_id=tag.category_id,
+                value=data['value']
+            ).first()
+            if existing_tag:
+                return jsonify({'error': 'Tag value already exists in this category'}), 400
+            tag.value = data['value']
+        
+        if 'label' in data:
+            tag.label = data['label']
+        if 'color' in data:
+            tag.color = data['color']
+        if 'sort_order' in data:
+            tag.sort_order = data['sort_order']
+        if 'is_active' in data:
+            tag.is_active = data['is_active']
+        
+        session.commit()
+        return jsonify(tag.to_dict())
+    finally:
+        session.close()
+
+
+@app.route('/api/tags/<int:tag_id>', methods=['DELETE'])
+def delete_tag(tag_id):
+    """Delete a tag (with validation)."""
+    session = get_db_session()
+    try:
+        tag = session.query(Tag).get(tag_id)
+        if not tag:
+            return jsonify({'error': 'Tag not found'}), 404
+        
+        category = tag.category
+        
+        # Check if this is the last active tag in the category
+        active_tags_count = session.query(Tag).filter_by(
+            category_id=category.category_id,
+            is_active=True
+        ).count()
+        
+        if active_tags_count <= 1:
+            return jsonify({'error': 'Cannot delete the last tag in a category'}), 400
+        
+        # Check if tag is in use based on category
+        in_use = False
+        entity_type = category.entity_type
+        field_name = category.field_name
+        
+        if entity_type == 'department':
+            in_use = session.query(Department).filter(
+                getattr(Department, field_name) == tag.value
+            ).first() is not None
+        elif entity_type == 'application':
+            in_use = session.query(Application).filter(
+                getattr(Application, field_name) == tag.value
+            ).first() is not None
+        elif entity_type == 'integration':
+            in_use = session.query(IntegrationStatus).filter(
+                getattr(IntegrationStatus, field_name) == tag.value
+            ).first() is not None
+        elif entity_type == 'contact':
+            in_use = session.query(Contact).filter(
+                getattr(Contact, field_name) == tag.value
+            ).first() is not None
+        elif entity_type == 'activity':
+            in_use = session.query(EngagementActivity).filter(
+                getattr(EngagementActivity, field_name) == tag.value
+            ).first() is not None
+        
+        if in_use:
+            return jsonify({
+                'error': 'Cannot delete tag that is currently in use',
+                'suggestion': 'Consider deactivating the tag instead'
+            }), 400
+        
+        session.delete(tag)
+        session.commit()
+        return jsonify({'message': 'Tag deleted successfully'})
+    finally:
+        session.close()
+
+
 # ==================== AI CHAT API ====================
+
 
 def get_database_context(session):
     """Get current database state for AI context."""

@@ -1126,3 +1126,84 @@ body {
     color: var(--gc-gray-dark);
     margin-bottom: var(--spacing-sm);
 }
+
+/* ==================== TAG MANAGEMENT ==================== */
+.tag-management-container {
+    background: var(--gc-white);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.tag-category-selector {
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 2px solid var(--gc-gray-lightest);
+}
+
+.tag-category-selector label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--gc-gray-dark);
+}
+
+.tag-category-selector select {
+    width: 100%;
+    max-width: 400px;
+    padding: var(--spacing-md);
+    border: 2px solid var(--gc-gray-light);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    background: var(--gc-white);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.tag-category-selector select:focus {
+    outline: none;
+    border-color: var(--gc-blue);
+}
+
+.tag-category-info {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: var(--gc-gray-lightest);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--gc-blue);
+}
+
+.tag-category-info h3 {
+    font-size: var(--font-size-xl);
+    color: var(--gc-blue);
+    margin-bottom: var(--spacing-sm);
+}
+
+.tag-category-info p {
+    color: var(--gc-gray);
+    margin-bottom: var(--spacing-md);
+}
+
+.tag-color-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    font-family: monospace;
+}
+
+#tags-table code {
+    background: var(--gc-gray-lightest);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: var(--font-size-xs);
+    color: var(--gc-blue);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--gc-gray);
+    font-size: var(--font-size-lg);
+}
