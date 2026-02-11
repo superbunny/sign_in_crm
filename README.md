@@ -2,8 +2,6 @@
 
 An internal CRM system for managing government department relationships with a sign-in (authentication) service provider. Built to replace Excel-based tracking with a structured, AI-ready system.
 
-![Dashboard](https://via.placeholder.com/800x400?text=Dashboard+Screenshot)
-
 ## Features
 
 - **Department Management**: Track government customers with tier levels (critical/standard) and status
@@ -35,8 +33,8 @@ An internal CRM system for managing government department relationships with a s
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/gov-crm.git
-cd gov-crm
+git clone https://github.com/superbunny/sign_in_crm.git
+cd sign_in_crm
 ```
 
 ### 2. Set up virtual environment
@@ -52,11 +50,13 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment (optional - for AI features)
+### 4. Configure environment  
 
-```bash
-cp .env.example .env
-# Edit .env and add your Gemini API key
+Create a `.env` file with the following variables:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+SECRET_KEY=your_secret_key_here
 ```
 
 ### 5. Run the application
@@ -67,23 +67,18 @@ python app.py
 
 Open http://localhost:5000 in your browser.
 
-## Configuration
 
-Create a `.env` file with the following variables:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-SECRET_KEY=your_secret_key_here
-```
 
 ## Project Structure
 
 ```
-gov-crm/
+sign_in_crm/
 ├── app.py              # Flask application with REST APIs
 ├── models.py           # SQLAlchemy database models
 ├── database.py         # Database initialization and seed data
 ├── config.py           # Application configuration
+├── tag_models.py       # Tag management models
+├── .env                # Environment variables
 ├── requirements.txt    # Python dependencies
 ├── crm.db              # SQLite database (auto-generated)
 ├── templates/
@@ -145,30 +140,6 @@ Use the buttons in the chat header to reset the conversation.
 ## Tag Management
 
 The Tag Management system provides a centralized way to manage dropdown values and badge colors throughout the application. This replaces hardcoded values with user-configurable options.
-
-### Features
-
-- **Centralized Configuration**: All dropdown values (tiers, statuses, roles, etc.) are managed in one place
-- **Custom Colors**: Assign hex colors to tags for consistent badge styling
-- **Soft Deletion**: Deactivate tags instead of deleting to preserve data integrity
-- **Sort Ordering**: Control the order tags appear in dropdowns
-- **Validation**: Prevents deletion of tags currently in use
-- **Dynamic UI**: Tag changes immediately reflect in all dropdowns and badges
-
-### Tag Categories
-
-The system includes predefined categories for:
-
-| Category | Entity | Field | Examples |
-|----------|--------|-------|----------|
-| `department_tier` | Department | tier | Standard, Critical |
-| `department_status` | Department | status | Active, Inactive |
-| `department_owner_team` | Department | owner_team | Team A, Team B |
-| `application_environment` | Application | environment | Production, Test |
-| `application_status` | Application | status | Live, Integrating, Deprecated |
-| `integration_stage` | Integration | stage | Intake, Design, Implementation, Testing, Production |
-| `contact_role` | Contact | role | Business, Technical, Security |
-| `activity_type` | Activity | type | Meeting, Email, Workshop, Incident |
 
 ### Managing Tags
 
