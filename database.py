@@ -76,6 +76,18 @@ def seed_tags(session):
             ]
         },
         {
+            'name': 'application_auth_type',
+            'display_name': 'Authentication Type',
+            'description': 'Authentication protocol used by applications',
+            'entity_type': 'application',
+            'field_name': 'auth_type',
+            'tags': [
+                {'value': 'GC Key', 'label': 'GC Key', 'color': '#3498DB', 'sort_order': 1},
+                {'value': 'Interact Sign In', 'label': 'Interact Sign In', 'color': '#9B59B6', 'sort_order': 2},
+                {'value': 'GCCF Consolidator', 'label': 'GCCF Consolidator', 'color': '#95A5A6', 'sort_order': 3},
+            ]
+        },
+        {
             'name': 'application_status',
             'display_name': 'Application Status',
             'description': 'Integration state of applications',
@@ -171,7 +183,7 @@ def seed_data(session):
     # Create Departments
     departments = [
         Department(
-            name="Department of Health",
+            name="Health Canada",
             acronym="DOH",
             tier="critical",
             status="active",
@@ -223,7 +235,7 @@ def seed_data(session):
             department_id=departments[0].department_id,
             app_name="Health Portal",
             environment="prod",
-            auth_type="OIDC",
+            auth_type="GC Key",
             go_live_date=date(2024, 3, 15),
             status="live"
         ),
@@ -231,7 +243,7 @@ def seed_data(session):
             department_id=departments[0].department_id,
             app_name="Vaccine Tracker",
             environment="prod",
-            auth_type="OIDC",
+            auth_type="GC Key",
             go_live_date=date(2024, 6, 1),
             status="live"
         ),
@@ -240,7 +252,7 @@ def seed_data(session):
             department_id=departments[1].department_id,
             app_name="Employment Benefits Portal",
             environment="prod",
-            auth_type="SAML",
+            auth_type="Interact Sign In",
             go_live_date=date(2023, 11, 20),
             status="live"
         ),
@@ -248,7 +260,7 @@ def seed_data(session):
             department_id=departments[1].department_id,
             app_name="Social Insurance Registry",
             environment="test",
-            auth_type="OIDC",
+            auth_type="GC Key",
             status="integrating"
         ),
         # CRA Apps
@@ -256,7 +268,7 @@ def seed_data(session):
             department_id=departments[2].department_id,
             app_name="My Account",
             environment="prod",
-            auth_type="OIDC",
+            auth_type="GC Key",
             go_live_date=date(2022, 4, 1),
             status="live"
         ),
@@ -264,7 +276,7 @@ def seed_data(session):
             department_id=departments[2].department_id,
             app_name="Business Tax Portal",
             environment="prod",
-            auth_type="SAML",
+            auth_type="Interact Sign In",
             go_live_date=date(2023, 1, 15),
             status="live"
         ),
@@ -273,7 +285,7 @@ def seed_data(session):
             department_id=departments[3].department_id,
             app_name="Fishing License Portal",
             environment="prod",
-            auth_type="OIDC",
+            auth_type="GC Key",
             go_live_date=date(2024, 8, 1),
             status="live"
         ),
@@ -281,7 +293,7 @@ def seed_data(session):
             department_id=departments[3].department_id,
             app_name="Marine Safety System",
             environment="test",
-            auth_type="OIDC",
+            auth_type="GC Key",
             status="integrating"
         ),
         # Parks Canada
@@ -289,7 +301,7 @@ def seed_data(session):
             department_id=departments[4].department_id,
             app_name="Park Reservation System",
             environment="prod",
-            auth_type="legacy",
+            auth_type="GCCF Consolidator",
             go_live_date=date(2021, 5, 1),
             status="deprecated"
         ),
@@ -298,7 +310,7 @@ def seed_data(session):
             department_id=departments[5].department_id,
             app_name="Aviation Portal",
             environment="test",
-            auth_type="OIDC",
+            auth_type="GC Key",
             status="integrating"
         ),
     ]
@@ -316,9 +328,9 @@ def seed_data(session):
         IntegrationStatus(app_id=applications[5].app_id, stage="production", status="on_track", risk_level="low"),
         IntegrationStatus(app_id=applications[6].app_id, stage="production", status="on_track", risk_level="low"),
         IntegrationStatus(app_id=applications[7].app_id, stage="implementation", status="blocked", risk_level="high",
-                         notes="Technical issues with legacy system integration"),
+                         notes="Technical issues with GC Key system integration"),
         IntegrationStatus(app_id=applications[8].app_id, stage="design", status="delayed", risk_level="medium",
-                         notes="Migrating from legacy auth to OIDC"),
+                         notes="Migrating from GCCF Consolidator auth to GC Key"),
         IntegrationStatus(app_id=applications[9].app_id, stage="intake", status="on_track", risk_level="low",
                          notes="Initial assessment pending"),
     ]
@@ -327,9 +339,9 @@ def seed_data(session):
     # Create Contacts
     contacts = [
         Contact(department_id=departments[0].department_id, name="Sarah Chen", role="business", 
-                email="sarah.chen@health.gc.ca", phone="613-555-0101"),
+                email="sarah.chen@hc-sc.gc.ca", phone="613-555-0101"),
         Contact(department_id=departments[0].department_id, name="Michael Brown", role="technical",
-                email="michael.brown@health.gc.ca", phone="613-555-0102"),
+                email="michael.brown@hc-sc.gc.ca", phone="613-555-0102"),
         Contact(department_id=departments[1].department_id, name="Jennifer Williams", role="business",
                 email="jennifer.williams@esdc.gc.ca", phone="613-555-0201"),
         Contact(department_id=departments[1].department_id, name="David Kim", role="technical",
@@ -398,7 +410,7 @@ def seed_data(session):
             department_id=departments[4].department_id,
             type="email",
             date=today - timedelta(days=45),
-            summary="Initial outreach about OIDC migration for legacy system.",
+            summary="Initial outreach about GC Key migration for GCCF Consolidator system.",
             next_action="Schedule discovery call",
             owner="Tom Harris"
         ),

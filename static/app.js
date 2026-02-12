@@ -338,7 +338,7 @@ function renderApplications() {
             <td><strong>${a.app_name}</strong></td>
             <td>${a.department_name || '-'}</td>
             <td>${renderTagBadge('application_environment', a.environment)}</td>
-            <td>${a.auth_type}</td>
+            <td>${renderTagBadge('application_auth_type', a.auth_type)}</td>
             <td>${renderTagBadge('application_status', a.status)}</td>
             <td>${a.go_live_date || '-'}</td>
             <td class="action-btns">
@@ -354,6 +354,7 @@ async function showAddApplicationModal() {
 
     // Load tag options
     const envOptions = await buildTagOptions('application_environment', 'prod');
+    const authOptions = await buildTagOptions('application_auth_type', 'OIDC');
     const statusOptions = await buildTagOptions('application_status', 'integrating');
 
     showModal('Add Application', `
@@ -375,9 +376,7 @@ async function showAddApplicationModal() {
             <div class="form-group">
                 <label>Auth Type</label>
                 <select name="auth_type">
-                    <option value="OIDC">OIDC</option>
-                    <option value="SAML">SAML</option>
-                    <option value="legacy">Legacy</option>
+                    ${authOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -419,6 +418,7 @@ async function editApplication(id) {
 
     // Load tag options with current values selected
     const envOptions = await buildTagOptions('application_environment', app.environment);
+    const authOptions = await buildTagOptions('application_auth_type', app.auth_type);
     const statusOptions = await buildTagOptions('application_status', app.status);
 
     showModal('Edit Application', `
@@ -440,9 +440,7 @@ async function editApplication(id) {
             <div class="form-group">
                 <label>Auth Type</label>
                 <select name="auth_type">
-                    <option value="OIDC" ${app.auth_type === 'OIDC' ? 'selected' : ''}>OIDC</option>
-                    <option value="SAML" ${app.auth_type === 'SAML' ? 'selected' : ''}>SAML</option>
-                    <option value="legacy" ${app.auth_type === 'legacy' ? 'selected' : ''}>Legacy</option>
+                    ${authOptions}
                 </select>
             </div>
             <div class="form-group">
@@ -1407,13 +1405,25 @@ function populateTagCategorySelector() {
         'activity': 'Activity'
     };
 
-    const options = tagCategories.map(cat => {
+    // Create an array of objects with category data and formatted labels
+    const categoryOptions = tagCategories.map(cat => {
         const tabName = entityTypeToTab[cat.entity_type] || cat.entity_type;
         // Extract field name from display_name (e.g., "Department Tier" -> "Tier")
         const fieldName = cat.display_name.replace(new RegExp(`^${tabName}\\s+`, 'i'), '');
         const formattedLabel = `${tabName} - ${fieldName}`;
 
-        return `<option value="${cat.name}">${formattedLabel}</option>`;
+        return {
+            name: cat.name,
+            label: formattedLabel
+        };
+    });
+
+    // Sort by the formatted label
+    categoryOptions.sort((a, b) => a.label.localeCompare(b.label));
+
+    // Generate the HTML options
+    const options = categoryOptions.map(opt => {
+        return `<option value="${opt.name}">${opt.label}</option>`;
     }).join('');
 
     select.innerHTML = '<option value="">-- Select a category --</option>' + options;
