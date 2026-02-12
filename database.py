@@ -172,42 +172,42 @@ def seed_data(session):
     departments = [
         Department(
             name="Department of Health",
-            short_name="DOH",
+            acronym="DOH",
             tier="critical",
             status="active",
             owner_team="Client Success Alpha"
         ),
         Department(
             name="Employment and Social Development Canada",
-            short_name="ESDC",
+            acronym="ESDC",
             tier="critical",
             status="active",
             owner_team="Client Success Alpha"
         ),
         Department(
             name="Canada Revenue Agency",
-            short_name="CRA",
+            acronym="CRA",
             tier="critical",
             status="active",
             owner_team="Client Success Beta"
         ),
         Department(
             name="Department of Fisheries and Oceans",
-            short_name="DFO",
+            acronym="DFO",
             tier="standard",
             status="active",
             owner_team="Client Success Beta"
         ),
         Department(
             name="Parks Canada",
-            short_name="PC",
+            acronym="PC",
             tier="standard",
             status="active",
             owner_team="Client Success Gamma"
         ),
         Department(
             name="Transport Canada",
-            short_name="TC",
+            acronym="TC",
             tier="standard",
             status="inactive",
             owner_team="Client Success Gamma"

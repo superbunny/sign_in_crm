@@ -160,7 +160,7 @@ function renderDepartments() {
         if (tierFilter && d.tier !== tierFilter) return false;
         if (statusFilter && d.status !== statusFilter) return false;
         if (ownerFilter && d.owner_team !== ownerFilter) return false;
-        if (searchFilter && !(d.name || '').toLowerCase().includes(searchFilter) && !(d.short_name || '').toLowerCase().includes(searchFilter)) return false;
+        if (searchFilter && !(d.name || '').toLowerCase().includes(searchFilter) && !(d.acronym || '').toLowerCase().includes(searchFilter)) return false;
         return true;
     });
 
@@ -168,7 +168,7 @@ function renderDepartments() {
     tbody.innerHTML = filtered.map(d => `
         <tr>
             <td><strong>${d.name}</strong></td>
-            <td>${d.short_name || '-'}</td>
+            <td>${d.acronym || '-'}</td>
             <td>${renderTagBadge('department_tier', d.tier)}</td>
             <td>${renderTagBadge('department_status', d.status)}</td>
             <td>${renderTagBadge('department_owner_team', d.owner_team)}</td>
@@ -210,8 +210,8 @@ async function showAddDepartmentModal() {
                 <input type="text" name="name" required>
             </div>
             <div class="form-group">
-                <label>Short Name</label>
-                <input type="text" name="short_name">
+                <label>Acronym</label>
+                <input type="text" name="acronym">
             </div>
             <div class="form-group">
                 <label>Tier</label>
@@ -267,8 +267,8 @@ async function editDepartment(id) {
                 <input type="text" name="name" value="${dept.name}" required>
             </div>
             <div class="form-group">
-                <label>Short Name</label>
-                <input type="text" name="short_name" value="${dept.short_name || ''}">
+                <label>Acronym</label>
+                <input type="text" name="acronym" value="${dept.acronym || ''}">
             </div>
             <div class="form-group">
                 <label>Tier</label>

@@ -147,7 +147,7 @@ def create_department():
         data = request.json
         department = Department(
             name=data.get('name'),
-            short_name=data.get('short_name'),
+            acronym=data.get('acronym'),
             tier=data.get('tier', 'standard'),
             status=data.get('status', 'active'),
             owner_team=data.get('owner_team')
@@ -171,8 +171,8 @@ def update_department(department_id):
         data = request.json
         if 'name' in data:
             department.name = data['name']
-        if 'short_name' in data:
-            department.short_name = data['short_name']
+        if 'acronym' in data:
+            department.acronym = data['acronym']
         if 'tier' in data:
             department.tier = data['tier']
         if 'status' in data:

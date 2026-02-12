@@ -19,7 +19,7 @@ class Department(Base):
     
     department_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
-    short_name = Column(String(50))
+    acronym = Column(String(50))
     tier = Column(String(20), default='standard')  # critical / standard
     status = Column(String(20), default='active')  # active / inactive
     owner_team = Column(String(100))
@@ -35,7 +35,7 @@ class Department(Base):
         return {
             'department_id': self.department_id,
             'name': self.name,
-            'short_name': self.short_name,
+            'acronym': self.acronym,
             'tier': self.tier,
             'status': self.status,
             'owner_team': self.owner_team,

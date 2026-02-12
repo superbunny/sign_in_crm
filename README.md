@@ -52,12 +52,8 @@ pip install -r requirements.txt
 
 ### 4. Configure environment  
 
-Create a `.env` file with the following variables:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-SECRET_KEY=your_secret_key_here
-```
+Rename the example environment file `.env.example` to `.env`.
+Then edit `.env` with your actual credentials.
 
 ### 5. Run the application
 
