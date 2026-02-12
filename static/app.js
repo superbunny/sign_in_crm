@@ -354,7 +354,7 @@ async function showAddApplicationModal() {
 
     // Load tag options
     const envOptions = await buildTagOptions('application_environment', 'prod');
-    const authOptions = await buildTagOptions('application_auth_type', 'OIDC');
+    const authOptions = await buildTagOptions('application_auth_type', 'GC Key');
     const statusOptions = await buildTagOptions('application_status', 'integrating');
 
     showModal('Add Application', `

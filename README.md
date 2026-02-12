@@ -5,7 +5,7 @@ An internal CRM system for managing government department relationships with a s
 ## Features
 
 - **Department Management**: Track government customers with tier levels (critical/standard) and status
-- **Application Tracking**: Manage applications integrating with the sign-in service (OIDC, SAML, legacy)
+- **Application Tracking**: Manage applications integrating with the sign-in service (GC Key, Interact Sign In, GCCF Consolidator)
 - **Integration Status**: Monitor integration progress through stages (intake → design → implementation → testing → production)
 - **Contact Directory**: Store contacts by department with role categorization
 - **Engagement Activities**: Log meetings, emails, workshops, and incidents with table view

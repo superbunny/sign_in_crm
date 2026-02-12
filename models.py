@@ -51,7 +51,7 @@ class Application(Base):
     
     Semantic definitions:
     - environment: Deployment stage ('prod' = production, 'test' = non-production)
-    - auth_type: Authentication protocol ('OIDC' = OpenID Connect, 'SAML' = Security Assertion Markup Language, 'legacy' = older protocols)
+    - auth_type: Authentication protocol ('GC Key' = OpenID Connect, 'Interact Sign In' = Security Assertion Markup Language, 'GCCF Consolidator' = older protocols)
     - status: Integration state ('live' = in production, 'integrating' = in progress, 'deprecated' = being phased out)
     """
     __tablename__ = 'applications'
@@ -60,7 +60,7 @@ class Application(Base):
     department_id = Column(Integer, ForeignKey('departments.department_id'), nullable=False)
     app_name = Column(String(255), nullable=False)
     environment = Column(String(20), default='prod')  # prod / test
-    auth_type = Column(String(20), default='OIDC')  # OIDC / SAML / legacy
+    auth_type = Column(String(20), default='GC Key')  # GC Key / Interact Sign In / GCCF Consolidator
     go_live_date = Column(Date)
     status = Column(String(30), default='integrating')  # live / integrating / deprecated
     created_at = Column(DateTime, default=datetime.utcnow)

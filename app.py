@@ -237,7 +237,7 @@ def create_application():
             department_id=data.get('department_id'),
             app_name=data.get('app_name'),
             environment=data.get('environment', 'prod'),
-            auth_type=data.get('auth_type', 'OIDC'),
+            auth_type=data.get('auth_type', 'GC Key'),
             go_live_date=parse_date(data.get('go_live_date')),
             status=data.get('status', 'integrating')
         )
