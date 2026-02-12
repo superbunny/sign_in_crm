@@ -232,12 +232,18 @@ def create_application():
     """Create a new application."""
     session = get_db_session()
     try:
-        data = request.json
+        # Handle auth_type as list or string
+        auth_type_input = data.get('auth_type', 'GC Key')
+        if isinstance(auth_type_input, list):
+            auth_type_val = ','.join(auth_type_input)
+        else:
+            auth_type_val = auth_type_input
+
         application = Application(
             department_id=data.get('department_id'),
             app_name=data.get('app_name'),
             environment=data.get('environment', 'prod'),
-            auth_type=data.get('auth_type', 'GC Key'),
+            auth_type=auth_type_val,
             go_live_date=parse_date(data.get('go_live_date')),
             status=data.get('status', 'integrating')
         )
@@ -275,7 +281,11 @@ def update_application(app_id):
         if 'environment' in data:
             application.environment = data['environment']
         if 'auth_type' in data:
-            application.auth_type = data['auth_type']
+            auth_type_input = data['auth_type']
+            if isinstance(auth_type_input, list):
+                 application.auth_type = ','.join(auth_type_input)
+            else:
+                 application.auth_type = auth_type_input
         if 'go_live_date' in data:
             application.go_live_date = parse_date(data['go_live_date'])
         if 'status' in data:

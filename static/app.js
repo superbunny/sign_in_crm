@@ -182,14 +182,19 @@ function renderDepartments() {
 }
 
 // Helper function to build dropdown options from tags
+// selectedValue can be a string (single value) or an array of strings (multiple values)
 async function buildTagOptions(categoryName, selectedValue = '') {
     try {
         const response = await apiCall(`tags/${categoryName}`);
         const tags = response.tags || [];
+
+        // Normalize selectedValue to an array
+        const selectedValues = Array.isArray(selectedValue) ? selectedValue : [selectedValue];
+
         return tags
             .filter(tag => tag.is_active)
             .sort((a, b) => a.sort_order - b.sort_order)
-            .map(tag => `<option value="${tag.value}" ${tag.value === selectedValue ? 'selected' : ''}>${tag.label}</option>`)
+            .map(tag => `<option value="${tag.value}" ${selectedValues.includes(tag.value) ? 'selected' : ''}>${tag.label}</option>`)
             .join('');
     } catch (error) {
         console.error(`Error loading tags for ${categoryName}:`, error);
@@ -326,19 +331,25 @@ function renderApplications() {
     let filtered = applications.filter(a => {
         if (deptFilter && String(a.department_id) !== deptFilter) return false;
         if (envFilter && a.environment !== envFilter) return false;
-        if (authFilter && a.auth_type !== authFilter) return false;
+        // Filter logical check for multiple auth types: checks if the filter value is IN the application's auth types
+        if (authFilter && !(a.auth_type || '').includes(authFilter)) return false;
         if (statusFilter && a.status !== statusFilter) return false;
         if (searchFilter && !(a.app_name || '').toLowerCase().includes(searchFilter)) return false;
         return true;
     });
 
     const tbody = document.querySelector('#applications-table tbody');
-    tbody.innerHTML = filtered.map(a => `
+    tbody.innerHTML = filtered.map(a => {
+        // Render multiple auth types
+        const authTypes = (a.auth_type || '').split(',').map(t => t.trim()).filter(t => t);
+        const authBadges = authTypes.map(type => renderTagBadge('application_auth_type', type)).join(' ');
+
+        return `
         <tr>
             <td><strong>${a.app_name}</strong></td>
             <td>${a.department_name || '-'}</td>
             <td>${renderTagBadge('application_environment', a.environment)}</td>
-            <td>${renderTagBadge('application_auth_type', a.auth_type)}</td>
+            <td>${authBadges || '-'}</td>
             <td>${renderTagBadge('application_status', a.status)}</td>
             <td>${a.go_live_date || '-'}</td>
             <td class="action-btns">
@@ -346,7 +357,7 @@ function renderApplications() {
                 <button class="btn btn-danger btn-sm" onclick="deleteApplication(${a.app_id})">Delete</button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 async function showAddApplicationModal() {
@@ -374,8 +385,8 @@ async function showAddApplicationModal() {
                 </select>
             </div>
             <div class="form-group">
-                <label>Auth Type</label>
-                <select name="auth_type">
+                <label>Auth Type (Hold Ctrl to select multiple)</label>
+                <select name="auth_type" multiple style="height: 100px;">
                     ${authOptions}
                 </select>
             </div>
@@ -399,7 +410,25 @@ async function showAddApplicationModal() {
     document.getElementById('application-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
+
+        // Handle multi-select for auth_type manually
+        const authTypes = [];
+        const authSelect = e.target.querySelector('select[name="auth_type"]');
+        if (authSelect) {
+            for (let option of authSelect.options) {
+                if (option.selected) {
+                    authTypes.push(option.value);
+                }
+            }
+        }
+
         const data = Object.fromEntries(formData);
+        // data.auth_type will only contain the last selected value from FormData if straight conversion is used,
+        // so we overwrite it with our array (or backend expects array)
+        if (authTypes.length > 0) {
+            data['auth_type'] = authTypes;
+        }
+
         await apiCall('applications', 'POST', data);
         closeModal();
         await loadAllData();
@@ -418,7 +447,11 @@ async function editApplication(id) {
 
     // Load tag options with current values selected
     const envOptions = await buildTagOptions('application_environment', app.environment);
-    const authOptions = await buildTagOptions('application_auth_type', app.auth_type);
+
+    // Handle multiple auth types for edit
+    const currentAuthTypes = (app.auth_type || '').split(',');
+    const authOptions = await buildTagOptions('application_auth_type', currentAuthTypes);
+
     const statusOptions = await buildTagOptions('application_status', app.status);
 
     showModal('Edit Application', `
@@ -438,8 +471,8 @@ async function editApplication(id) {
                 </select>
             </div>
             <div class="form-group">
-                <label>Auth Type</label>
-                <select name="auth_type">
+                <label>Auth Type (Hold Ctrl to select multiple)</label>
+                <select name="auth_type" multiple style="height: 100px;">
                     ${authOptions}
                 </select>
             </div>
@@ -464,6 +497,22 @@ async function editApplication(id) {
         e.preventDefault();
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
+
+        // Handle multi-select for auth_type manually
+        const authTypes = [];
+        const authSelect = e.target.querySelector('select[name="auth_type"]');
+        if (authSelect) {
+            for (let option of authSelect.options) {
+                if (option.selected) {
+                    authTypes.push(option.value);
+                }
+            }
+        }
+
+        if (authTypes.length > 0) {
+            data['auth_type'] = authTypes;
+        }
+
         await apiCall(`applications/${id}`, 'PUT', data);
         closeModal();
         await loadAllData();

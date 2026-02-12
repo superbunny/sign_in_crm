@@ -60,7 +60,7 @@ class Application(Base):
     department_id = Column(Integer, ForeignKey('departments.department_id'), nullable=False)
     app_name = Column(String(255), nullable=False)
     environment = Column(String(20), default='prod')  # prod / test
-    auth_type = Column(String(20), default='GC Key')  # GC Key / Interact Sign In / GCCF Consolidator
+    auth_type = Column(Text, default='GC Key')  # GC Key, Interact Sign In, etc. (comma-separated)
     go_live_date = Column(Date)
     status = Column(String(30), default='integrating')  # live / integrating / deprecated
     created_at = Column(DateTime, default=datetime.utcnow)
