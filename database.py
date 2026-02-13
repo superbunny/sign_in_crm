@@ -184,7 +184,7 @@ def seed_data(session):
     departments = [
         Department(
             name="Health Canada",
-            acronym="DOH",
+            acronym="HC",
             tier="critical",
             status="active",
             owner_team="Client Success Alpha"
